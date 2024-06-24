@@ -5,6 +5,10 @@ import xml.etree.ElementTree as ET
 import tensorflow as tf
 import tensorflow_hub as hub
 
+# TensorFlowの警告を抑制
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
+tf.compat.v1.logging.set_verbosity(tf.compat.v1.logging.ERROR)
+
 model = hub.load("https://tfhub.dev/tensorflow/faster_rcnn/inception_resnet_v2_640x640/1")
 
 # XMLファイルからアノテーションを解析する関数
@@ -47,29 +51,22 @@ train_dataset = create_dataset(train_image_dir, annotation_dir)
 valid_dataset = create_dataset(valid_image_dir, annotation_dir)
 test_dataset = create_dataset(test_image_dir, annotation_dir)
 
-# 物体検出用の事前訓練済みモデルなどの準備
-
-# 検出された物体の情報（例：bounding boxの座標など）を取得
-# ここでは仮に検出された物体の座標を示すリストboxesを想定
-boxes = [(100, 100, 200, 200)]  # (xmin, ymin, xmax, ymax)
-
-# 検出された物体の位置に矩形を描画
-for data in train_dataset + valid_dataset + test_dataset:
-    image = data['image']
-    for (xmin, ymin, xmax, ymax) in boxes:
-        cv2.rectangle(image, (xmin, ymin), (xmax, ymax), (0, 255, 0), 2)
-
-    # 結果を表示
-    cv2.imshow('Object Detection', image)
-    cv2.waitKey(0)
-
-cv2.destroyAllWindows()
-
 # detect_objects 関数内で画像の形状を修正
 def detect_objects(image):
+    # 画像を正方形にクロップ
+    height, width, _ = image.shape
+    min_dim = min(height, width)
+    start_x = (width - min_dim) // 2
+    start_y = (height - min_dim) // 2
+    cropped_image = image[start_y:start_y+min_dim, start_x:start_x+min_dim]
+
     # 画像をリサイズしてモデルに合わせる
-    image_resized = tf.image.resize(image, (640, 640))
-    image_resized = tf.cast(image_resized, tf.float32)  # 修正: 画像のデータ型をtf.float32に変換
+    image_resized = tf.image.resize(cropped_image, (640, 640))
+    image_resized = tf.cast(image_resized, tf.uint8)
+
+    # バッチサイズの次元を追加
+    image_resized = tf.expand_dims(image_resized, 0)
+
     # モデルに渡す前に画像の型を変換
     result = model(image_resized)
 
@@ -79,15 +76,14 @@ def detect_objects(image):
     classes = result["detection_classes"][0].numpy().astype(int)
 
     # 画像に物体を描画
-    image_np = np.array(image[0])
+    image_np = np.array(image)
     for i in range(len(boxes)):
-        if scores[i] > 0.5:  # スコアが0.5以上の物体のみを表示
+        if scores[i] > 0.1:  # スコアが0.5以上の物体のみを表示
             ymin, xmin, ymax, xmax = boxes[i]
-            xmin, xmax, ymin, ymax = int(xmin * 640), int(xmax * 640), int(ymin * 640), int(ymax * 640)
+            xmin, xmax, ymin, ymax = int(xmin * min_dim), int(xmax * min_dim), int(ymin * min_dim), int(ymax * min_dim)
             cv2.rectangle(image_np, (xmin, ymin), (xmax, ymax), (0, 255, 0), 2)
 
     return image_np
-
 
 # 画像を読み込み
 image = cv2.imread("./Datasets/Minecraft/Tree/IdentificationDataset/test/2022-06-22_11-25-20_png.rf.d333444b8f317695e98c1eba526316ef.jpg")
@@ -99,3 +95,15 @@ result_image = detect_objects(image)
 cv2.imshow("Object Detection", result_image)
 cv2.waitKey(0)
 cv2.destroyAllWindows()
+
+# # 検出された物体の位置に矩形を描画
+# for data in train_dataset + valid_dataset + test_dataset:
+#     image = data['image']
+#     for (xmin, ymin, xmax, ymax) in boxes:
+#         cv2.rectangle(image, (xmin, ymin), (xmax, ymax), (0, 255, 0), 2)
+
+#     # 結果を表示
+#     cv2.imshow('Object Detection', image)
+#     cv2.waitKey(0)
+
+# cv2.destroyAllWindows()
