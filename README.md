@@ -16,9 +16,13 @@ IRADは、学習用データと現在の映像データを画像認識して得�
 ・[--日本語](#日本語-ver)
 
 ## ・ENGLISH ver
+(Translated at DeepL)
 # Development Progress
+  
 Currently developing an IRAD to perform the task of cutting down wood in Minecraft.
+  
 Object detection of trees in mycraft using YOLO v5.
+  
 . /IRAD/Codes/Minecraft/Tree/YOLOv5.py to run
 
 ## The following is filled in as a note since we are still in the design phase regarding IRAD.
@@ -144,7 +148,9 @@ Translated with DeepL.com (free version)
 
 # 開発の進捗
 現在マインクラフトで木材を伐採するタスクを実行するためのIRADを開発中
+  
 YOLO v5 を使用してマイクラ内の木を物体検出した。
+  
 ./IRAD/Codes/Minecraft/Tree/YOLOv5.py から実行可能
 
 ## IRADについてはまだ設計段階なので、下記はメモとして記入している。
