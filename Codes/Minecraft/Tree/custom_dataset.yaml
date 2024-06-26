@@ -1,0 +1,6 @@
+# custom_dataset.yaml
+train: ../Datasets/Minecraft/TreeYOLO/train/images
+val: ../Datasets/Minecraft/TreeYOLO/val/images
+
+nc: 1  # クラス数
+names: ['Minecaft_Tree']  # クラス名
