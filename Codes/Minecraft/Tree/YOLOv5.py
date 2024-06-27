@@ -15,6 +15,3 @@ results = model(img)
 
 # 結果を表示する
 results.show()
-
-# 検出結果の詳細を表示する（オプション）
-print(results.pandas().xyxy[0])  # x軸、y軸の座標、信頼度、クラスラベルなどの情報
