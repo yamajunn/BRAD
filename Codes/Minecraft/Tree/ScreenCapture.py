@@ -5,7 +5,7 @@ from PIL import Image
 import numpy as np
 
 # モデルをロードする
-model = torch.hub.load('ultralytics/yolov5', 'custom', path='./Weights/Minecraft/Tree/best.pt')
+model = torch.hub.load('ultralytics/yolov5', 'custom', path='./Weights/Minecraft/Tree/yolov5.pt')
 
 # 確認用ウィンドウの名前
 window_name = 'YOLOv5 Detection'
