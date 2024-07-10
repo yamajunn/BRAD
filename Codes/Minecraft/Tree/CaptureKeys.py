@@ -1,9 +1,11 @@
 import csv
 import time
+import threading
 from pynput import keyboard, mouse
+from PIL import ImageGrab
 
 # CSVファイルを開き、ライターを作成
-with open('./Codes/Minecraft/Tree/TestData/Input/input_log.csv', mode='w', newline='') as csv_file:
+with open('./Codes/Minecraft/Tree/Datas/Input/input_log.csv', mode='w', newline='') as csv_file:
     csv_writer = csv.writer(csv_file)
     csv_writer.writerow(['timestamp', 'device', 'event', 'detail'])
     print("CSV file opened and header written")
@@ -57,10 +59,31 @@ with open('./Codes/Minecraft/Tree/TestData/Input/input_log.csv', mode='w', newli
         csv_file.flush()  # データを即座にファイルに書き込む
         print(f"Mouse moved to ({x}, {y})")
 
+    # マウスがスクロールされたときのコールバック関数
+    def on_scroll(x, y, dx, dy):
+        timestamp = time.time()
+        csv_writer.writerow([timestamp, 'mouse', 'scroll', f'({x}, {y}) {dx} {dy}'])
+        csv_file.flush()  # データを即座にファイルに書き込む
+        print(f"Mouse scrolled at ({x}, {y}) with delta ({dx}, {dy})")
+
+    # スクリーンショットを定期的に保存する関数
+    def capture_screenshots():
+        frame_count = 0
+        while True:
+            timestamp = time.time()
+            img = ImageGrab.grab()
+            img.save(f'./Codes/Minecraft/Tree/Datas/Frames/frame_{frame_count}.png')
+            frame_count += 1
+            time.sleep(1 / 30)  # 30fpsでキャプチャ
+
+    # スクリーンショットキャプチャを別スレッドで実行
+    screenshot_thread = threading.Thread(target=capture_screenshots)
+    screenshot_thread.start()
+
     # キーボードリスナーを作成
     keyboard_listener = keyboard.Listener(on_press=on_key_press, on_release=on_key_release)
     # マウスリスナーを作成
-    mouse_listener = mouse.Listener(on_click=on_click, on_move=on_move)
+    mouse_listener = mouse.Listener(on_click=on_click, on_move=on_move, on_scroll=on_scroll)
 
     # リスナーを開始
     keyboard_listener.start()
@@ -69,4 +92,5 @@ with open('./Codes/Minecraft/Tree/TestData/Input/input_log.csv', mode='w', newli
     # リスナーを停止するまで待機
     keyboard_listener.join()
     mouse_listener.join()
+    screenshot_thread.join()
     print("Listeners stopped")
