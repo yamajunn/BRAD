@@ -1,6 +1,7 @@
 import csv
 import time
 import threading
+import queue
 from pynput import keyboard, mouse
 from PIL import Image, ImageDraw, ImageGrab
 import pyautogui
@@ -67,8 +68,7 @@ with open('./Codes/Minecraft/Tree/Datas/Input/input_log.csv', mode='w', newline=
         csv_file.flush()  # データを即座にファイルに書き込む
         print(f"Mouse scrolled at ({x}, {y}) with delta ({dx}, {dy})")
 
-    def capture_screenshots():
-        frame_count = 0
+    def capture_screenshots(queue):
         cursor_size = (16, 16)  # カーソルのサイズ
         cursor_color = (255, 0, 0)  # カーソルの色（赤色）
 
@@ -94,19 +94,27 @@ with open('./Codes/Minecraft/Tree/Datas/Input/input_log.csv', mode='w', newline=
             cursor_rect = [cursor_x, cursor_y, cursor_x + cursor_size[0], cursor_y + cursor_size[1]]
             draw.rectangle(cursor_rect, outline=cursor_color, width=2)
             
-            # 画像を保存
-            img.save(f'./Codes/Minecraft/Tree/Datas/Frames/frame_{frame_count}.png', 'PNG')
-            frame_count += 1
-            
-            # 画像キャプチャと保存にかかった時間を計測
-            elapsed_time = time.time() - start_time
+            # 画像をキューに追加
+            queue.put((img, start_time))
             
             # 0.1秒から処理時間を引いた残りの時間だけスリープ
+            elapsed_time = time.time() - start_time
             time.sleep(max(0, 0.1 - elapsed_time))
 
+    def save_screenshots(queue):
+        frame_count = 0
+        while True:
+            img, timestamp = queue.get()
+            img.save(f'./Codes/Minecraft/Tree/Datas/Frames/frame_{frame_count}.jpg', 'JPEG', quality=85)
+            frame_count += 1
+
+    screenshot_queue = queue.Queue()
+
     # スクリーンショットキャプチャを別スレッドで実行
-    screenshot_thread = threading.Thread(target=capture_screenshots)
-    screenshot_thread.start()
+    capture_thread = threading.Thread(target=capture_screenshots, args=(screenshot_queue,))
+    save_thread = threading.Thread(target=save_screenshots, args=(screenshot_queue,))
+    capture_thread.start()
+    save_thread.start()
 
     # キーボードリスナーを作成
     keyboard_listener = keyboard.Listener(on_press=on_key_press, on_release=on_key_release)
@@ -120,5 +128,6 @@ with open('./Codes/Minecraft/Tree/Datas/Input/input_log.csv', mode='w', newline=
     # リスナーを停止するまで待機
     keyboard_listener.join()
     mouse_listener.join()
-    screenshot_thread.join()
+    capture_thread.join()
+    save_thread.join()
     print("Listeners stopped")
