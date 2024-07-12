@@ -2,7 +2,8 @@ import csv
 import time
 import threading
 from pynput import keyboard, mouse
-from PIL import ImageGrab
+from PIL import Image, ImageDraw, ImageGrab
+import pyautogui
 
 # CSVファイルを開き、ライターを作成
 with open('./Codes/Minecraft/Tree/Datas/Input/input_log.csv', mode='w', newline='') as csv_file:
@@ -66,15 +67,42 @@ with open('./Codes/Minecraft/Tree/Datas/Input/input_log.csv', mode='w', newline=
         csv_file.flush()  # データを即座にファイルに書き込む
         print(f"Mouse scrolled at ({x}, {y}) with delta ({dx}, {dy})")
 
-    # スクリーンショットを定期的に保存する関数
     def capture_screenshots():
         frame_count = 0
+        cursor_size = (16, 16)  # カーソルのサイズ
+        cursor_color = (255, 0, 0)  # カーソルの色（赤色）
+
+        # スクリーンの解像度を取得
+        screen_width, screen_height = pyautogui.size()
+
         while True:
-            timestamp = time.time()
+            start_time = time.time()
+            
+            # 画像をキャプチャ
             img = ImageGrab.grab()
-            img.save(f'./Codes/Minecraft/Tree/Datas/Frames/frame_{frame_count}.png')
+            img_width, img_height = img.size
+
+            # マウスカーソルの位置を取得
+            cursor_x, cursor_y = pyautogui.position()
+            
+            # 座標を変換
+            cursor_x = int(cursor_x * (img_width / screen_width))
+            cursor_y = int(cursor_y * (img_height / screen_height))
+
+            # カーソルを描画
+            draw = ImageDraw.Draw(img)
+            cursor_rect = [cursor_x, cursor_y, cursor_x + cursor_size[0], cursor_y + cursor_size[1]]
+            draw.rectangle(cursor_rect, outline=cursor_color, width=2)
+            
+            # 画像を保存
+            img.save(f'./Codes/Minecraft/Tree/Datas/Frames/frame_{frame_count}.png', 'PNG')
             frame_count += 1
-            time.sleep(1 / 30)  # 30fpsでキャプチャ
+            
+            # 画像キャプチャと保存にかかった時間を計測
+            elapsed_time = time.time() - start_time
+            
+            # 0.1秒から処理時間を引いた残りの時間だけスリープ
+            time.sleep(max(0, 0.1 - elapsed_time))
 
     # スクリーンショットキャプチャを別スレッドで実行
     screenshot_thread = threading.Thread(target=capture_screenshots)
