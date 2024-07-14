@@ -4,7 +4,8 @@ import threading
 import cv2
 import numpy as np
 from pynput import keyboard, mouse
-from PIL import ImageGrab
+from PIL import Image, ImageDraw, ImageGrab
+import pyautogui
 
 # CSVファイルを開き、ライターを作成
 with open('./Codes/Minecraft/Tree/Datas/Input/input_log.csv', mode='w', newline='') as csv_file:
