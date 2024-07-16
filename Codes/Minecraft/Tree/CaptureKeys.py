@@ -82,32 +82,42 @@ def on_scroll(x, y, dx, dy):
 def capture_video():
     fourcc = cv2.VideoWriter_fourcc(*'mp4v')
     out = cv2.VideoWriter('./Codes/Minecraft/Tree/Datas/Video/output.mp4', fourcc, 30.0, (1920, 1080))
+    
+    last_time = time.time()
 
     while running:
+        current_time = time.time()
+        elapsed_time = current_time - last_time
+
+        # 30FPSのフレームごとの目標時間
+        target_time = 1 / 30
+
+        if elapsed_time < target_time:
+            time.sleep(target_time - elapsed_time)
+
         img = ImageGrab.grab()
         img_np = np.array(img)
         img_bgr = cv2.cvtColor(img_np, cv2.COLOR_RGB2BGR)
 
-        # マウスカーソルの位置を取得
         cursor_x, cursor_y = pyautogui.position()
-
-        # カーソルのサイズを背景に合わせる
-        cursor_resized = cursor_img.resize((10, 15), Image.LANCZOS)  # サイズを調整
+        cursor_resized = cursor_img.resize((10, 15), Image.LANCZOS)
         cursor_img_np = np.array(cursor_resized)
 
-        # カーソルの位置が画像の範囲内に収まるように調整
         cursor_x = min(cursor_x, img_bgr.shape[1] - cursor_img_np.shape[1])
         cursor_y = min(cursor_y, img_bgr.shape[0] - cursor_img_np.shape[0])
 
-        # 合成処理
-        for c in range(3):  # RGB
+        for c in range(3):
             img_bgr[cursor_y:cursor_y + cursor_img_np.shape[0], cursor_x:cursor_x + cursor_img_np.shape[1], c] = \
                 cursor_img_np[:, :, c] * (cursor_img_np[:, :, 3] / 255.0) + \
                 img_bgr[cursor_y:cursor_y + cursor_img_np.shape[0], cursor_x:cursor_x + cursor_img_np.shape[1], c] * (1 - cursor_img_np[:, :, 3] / 255.0)
 
         out.write(img_bgr)
-        time.sleep(1 / 30)
+
+        last_time = time.time()  # 時間を更新
+
     out.release()
+
+
 
 
 # スクリーンキャプチャを別スレッドで実行
