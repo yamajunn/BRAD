@@ -6,6 +6,7 @@ import numpy as np
 from pynput import keyboard, mouse
 from PIL import Image, ImageGrab
 import pyautogui
+
 # カーソル画像を指定
 cursor_image_path = './Codes/Minecraft/Tree/clipart2364182.png'
 cursor_img = Image.open(cursor_image_path).convert("RGBA")
@@ -82,43 +83,40 @@ def on_scroll(x, y, dx, dy):
 def capture_video():
     fourcc = cv2.VideoWriter_fourcc(*'mp4v')
     out = cv2.VideoWriter('./Codes/Minecraft/Tree/Datas/Video/output.mp4', fourcc, 30.0, (1920, 1080))
-    
-    last_time = time.time()
+
+    start_time = time.time()
+    frame_count = 0
 
     while running:
         current_time = time.time()
-        elapsed_time = current_time - last_time
+        elapsed_time = current_time - start_time
 
         # 30FPSのフレームごとの目標時間
         target_time = 1 / 30
 
-        if elapsed_time < target_time:
-            time.sleep(target_time - elapsed_time)
+        if elapsed_time > frame_count * target_time:
+            img = ImageGrab.grab()
+            img_np = np.array(img)
+            img_bgr = cv2.cvtColor(img_np, cv2.COLOR_RGB2BGR)
 
-        img = ImageGrab.grab()
-        img_np = np.array(img)
-        img_bgr = cv2.cvtColor(img_np, cv2.COLOR_RGB2BGR)
+            cursor_x, cursor_y = pyautogui.position()
+            cursor_resized = cursor_img.resize((10, 15), Image.LANCZOS)
+            cursor_img_np = np.array(cursor_resized)
 
-        cursor_x, cursor_y = pyautogui.position()
-        cursor_resized = cursor_img.resize((10, 15), Image.LANCZOS)
-        cursor_img_np = np.array(cursor_resized)
+            cursor_x = min(cursor_x, img_bgr.shape[1] - cursor_img_np.shape[1])
+            cursor_y = min(cursor_y, img_bgr.shape[0] - cursor_img_np.shape[0])
 
-        cursor_x = min(cursor_x, img_bgr.shape[1] - cursor_img_np.shape[1])
-        cursor_y = min(cursor_y, img_bgr.shape[0] - cursor_img_np.shape[0])
+            for c in range(3):
+                img_bgr[cursor_y:cursor_y + cursor_img_np.shape[0], cursor_x:cursor_x + cursor_img_np.shape[1], c] = \
+                    cursor_img_np[:, :, c] * (cursor_img_np[:, :, 3] / 255.0) + \
+                    img_bgr[cursor_y:cursor_y + cursor_img_np.shape[0], cursor_x:cursor_x + cursor_img_np.shape[1], c] * (1 - cursor_img_np[:, :, 3] / 255.0)
 
-        for c in range(3):
-            img_bgr[cursor_y:cursor_y + cursor_img_np.shape[0], cursor_x:cursor_x + cursor_img_np.shape[1], c] = \
-                cursor_img_np[:, :, c] * (cursor_img_np[:, :, 3] / 255.0) + \
-                img_bgr[cursor_y:cursor_y + cursor_img_np.shape[0], cursor_x:cursor_x + cursor_img_np.shape[1], c] * (1 - cursor_img_np[:, :, 3] / 255.0)
-
-        out.write(img_bgr)
-
-        last_time = time.time()  # 時間を更新
+            out.write(img_bgr)
+            frame_count += 1
 
     out.release()
-
-
-
+    actual_duration = time.time() - start_time
+    print(f"Video duration: {actual_duration} seconds")
 
 # スクリーンキャプチャを別スレッドで実行
 video_thread = threading.Thread(target=capture_video)
