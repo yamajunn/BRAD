@@ -8,7 +8,7 @@ from PIL import Image, ImageGrab
 import pyautogui
 
 # カーソル画像を指定
-cursor_image_path = './Codes/Minecraft/Tree/clipart2364182.png'
+cursor_image_path = './Codes/Minecraft/Tree/clipart.png'
 cursor_img = Image.open(cursor_image_path).convert("RGBA")
 
 # CSVファイルを開き、ライターを作成
