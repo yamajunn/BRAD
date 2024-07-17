@@ -82,10 +82,10 @@ def on_scroll(x, y, dx, dy):
 # スクリーンショットを動画形式で保存する関数
 def capture_video():
     fourcc = cv2.VideoWriter_fourcc(*'mp4v')
-    out = cv2.VideoWriter('./Codes/Minecraft/Tree/Datas/Video/output.mp4', fourcc, 30.0, (1920, 1080))
+    final_video_path = './Codes/Minecraft/Tree/Datas/Video/output.mp4'
 
+    frames = []
     start_time = time.time()
-    frame_count = 0
 
     while running:
         current_time = time.time()
@@ -94,7 +94,7 @@ def capture_video():
         # 30FPSのフレームごとの目標時間
         target_time = 1 / 30
 
-        if elapsed_time > frame_count * target_time:
+        if elapsed_time > len(frames) * target_time:
             img = ImageGrab.grab()
             img_np = np.array(img)
             img_bgr = cv2.cvtColor(img_np, cv2.COLOR_RGB2BGR)
@@ -111,12 +111,17 @@ def capture_video():
                     cursor_img_np[:, :, c] * (cursor_img_np[:, :, 3] / 255.0) + \
                     img_bgr[cursor_y:cursor_y + cursor_img_np.shape[0], cursor_x:cursor_x + cursor_img_np.shape[1], c] * (1 - cursor_img_np[:, :, 3] / 255.0)
 
-            out.write(img_bgr)
-            frame_count += 1
+            frames.append(img_bgr)
 
-    out.release()
     actual_duration = time.time() - start_time
-    print(f"Video duration: {actual_duration} seconds")
+    fps = len(frames) / actual_duration
+    out_final = cv2.VideoWriter(final_video_path, fourcc, fps, (1920, 1080))
+
+    for frame in frames:
+        out_final.write(frame)
+
+    out_final.release()
+    print(f"Final video saved with duration: {actual_duration} seconds and FPS: {fps}")
 
 # スクリーンキャプチャを別スレッドで実行
 video_thread = threading.Thread(target=capture_video)
