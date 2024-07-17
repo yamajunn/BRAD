@@ -35,7 +35,7 @@ def on_key_press(key):
         except AttributeError:
             csv_writer.writerow([timestamp, 'keyboard', 'press', str(key)])
         csv_file.flush()
-        print(f"Key pressed: {key}")
+        print(f"\rKey pressed: {key}",end="")
 
 def on_key_release(key):
     if key in pressed_keys:
@@ -46,7 +46,7 @@ def on_key_release(key):
         except AttributeError:
             csv_writer.writerow([timestamp, 'keyboard', 'release', str(key)])
         csv_file.flush()
-        print(f"Key released: {key}")
+        print(f"\rKey released: {key}",end="")
 
 def on_click(x, y, button, pressed):
     if not running:
