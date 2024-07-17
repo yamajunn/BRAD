@@ -35,7 +35,7 @@ def on_key_press(key):
         except AttributeError:
             csv_writer.writerow([timestamp, 'keyboard', 'press', str(key)])
         csv_file.flush()
-        print(f"\rKey pressed: {key}",end="")
+        print(f"Key pressed: {key}")
 
 def on_key_release(key):
     if key in pressed_keys:
@@ -46,7 +46,7 @@ def on_key_release(key):
         except AttributeError:
             csv_writer.writerow([timestamp, 'keyboard', 'release', str(key)])
         csv_file.flush()
-        print(f"\rKey released: {key}",end="")
+        print(f"Key released: {key}")
 
 def on_click(x, y, button, pressed):
     if not running:
@@ -55,12 +55,12 @@ def on_click(x, y, button, pressed):
     if pressed:
         pressed_buttons.add(button)
         csv_writer.writerow([timestamp, 'mouse', 'press', f'{button} at ({x}, {y})'])
-        print(f"\rMouse button pressed: {button} at ({x}, {y})",end="")
+        print(f"Mouse button pressed: {button} at ({x}, {y})")
     else:
         if button in pressed_buttons:
             pressed_buttons.remove(button)
         csv_writer.writerow([timestamp, 'mouse', 'release', f'{button} at ({x}, {y})'])
-        print(f"\rMouse button released: {button} at ({x}, {y})",end="")
+        print(f"Mouse button released: {button} at ({x}, {y})")
     csv_file.flush()
 
 def on_move(x, y):
@@ -69,7 +69,7 @@ def on_move(x, y):
     timestamp = time.time()
     csv_writer.writerow([timestamp, 'mouse', 'move', f'({x}, {y})'])
     csv_file.flush()
-    print(f"\rMouse moved to ({x}, {y})",end="")
+    print(f"Mouse moved to ({x}, {y})")
 
 def on_scroll(x, y, dx, dy):
     if not running:
@@ -77,7 +77,7 @@ def on_scroll(x, y, dx, dy):
     timestamp = time.time()
     csv_writer.writerow([timestamp, 'mouse', 'scroll', f'({x}, {y}) {dx} {dy}'])
     csv_file.flush()
-    print(f"\rMouse scrolled at ({x}, {y}) with delta ({dx}, {dy})",end="")
+    print(f"Mouse scrolled at ({x}, {y}) with delta ({dx}, {dy})")
 
 # スクリーンショットを動画形式で保存する関数
 def capture_video():
