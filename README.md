@@ -1,5 +1,6 @@
 # ARAD (Action Recognition Action Decision)
-
+Renamed from Image Recognition Action Decision to Action Recognition Action Decision
+  
 ・[--ENGLISH](#english-ver)
 ・[--日本語](#日本語-ver)
 
