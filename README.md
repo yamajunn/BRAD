@@ -1,4 +1,4 @@
-# IRAD (Image Recognition Action Decision)
+# ARAD (Action Recognition Action Decision)
 
 ・[--ENGLISH](#english-ver)
 ・[--日本語](#日本語-ver)
@@ -6,27 +6,27 @@
 ## ・ENGLISH ver
 (Translated at DeepL)
 # Development Progress
-Currently developing an IRAD to perform the task of cutting down wood in Minecraft.
+Currently developing an ARAD to perform the task of cutting down wood in Minecraft.
   
 - Real-time object detection of trees in Minecraft using YOLO v5.
-- . /IRAD/Codes/Minecraft/Tree/ScreenCapture.py to run
+- . /ARAD/Codes/Minecraft/Tree/ScreenCapture.py to run
   
 - Code being produced to create dataset for motion recognition model.
-- . /IRAD/Codes/Minecraft/Tree/CaptureScreenKeys.py
+- . /ARAD/Codes/Minecraft/Tree/CaptureScreenKeys.py
   
-## The following is entered as a note about IRAD, as it is still in the design stage.
+## The following is entered as a note about ARAD, as it is still in the design stage.
 
-### IRAD working procedure:
+### ARAD working procedure:
 - ##### Recognize motion and convert current video data to text from training data and current video data.
 - ##### Select training data similar to long-term objectives to determine short-term objectives.
 - ##### Determine the short-term objective based on the selected training data. By processing this recursively, the action plan becomes more specific.
 - ##### If the current situation changes, the action plan is modified accordingly. The recursive process also allows the broad action plan to be changed as needed.
 
-IRAD takes into account these action plan texts as well as various factors, such as past memories and current status that it has acquired, to determine whether the objective and current situation are similar.
+ARAD takes into account these action plan texts as well as various factors, such as past memories and current status that it has acquired, to determine whether the objective and current situation are similar.
 
 By generating action plans in text format, character recognition such as OCR can be used in conjunction.
 
-### In order to implement IRAD:.
+### In order to implement ARAD:.
 - ##### Required libraries:.
     - ###### Image Recognition
     - ###### Motion Recognition
@@ -57,7 +57,7 @@ By generating action plans in text format, character recognition such as OCR can
 
 ###### In the future, a new method will be adopted to replace the text format.
 
-### Example of the IRAD concept
+### Example of the ARAD concept
 As an example, in Minecraft, logs are collected, crafted into wood, and placed on the ground. To perform the task of,
 
 ### Roughly.
@@ -129,27 +129,27 @@ If possible, we would like to use a model that can automatically assign labels u
 # ・日本語 ver
 
 # 開発の進捗
-現在マインクラフトで木材を伐採するタスクを実行するためのIRADを開発中
+現在マインクラフトで木材を伐採するタスクを実行するためのARADを開発中
   
 - YOLO v5 を使用してマインクラフト内の木をリアルタイムで物体検出した。
-- ./IRAD/Codes/Minecraft/Tree/ScreenCapture.py から実行可能
+- ./ARAD/Codes/Minecraft/Tree/ScreenCapture.py から実行可能
   
 - 動作認識モデル用のデータセットを作成するコードを製作中
-- ./IRAD/Codes/Minecraft/Tree/CaptureScreenKeys.py から実行可能
+- ./ARAD/Codes/Minecraft/Tree/CaptureScreenKeys.py から実行可能
   
-## IRADについてはまだ設計段階なので、下記はメモとして記入している。
+## ARADについてはまだ設計段階なので、下記はメモとして記入している。
 
-### IRADの動作手順：
+### ARADの動作手順：
 - ##### 学習用データと現在の映像データを動作認識してテキストに変換する。
 - ##### 短期的な目的を決定するために、長期的な目的と類似した学習データを選択する。
 - ##### 選択した学習データを元に、短期的な目的を決定する。これを再帰的に処理することで、行動計画が具体的になっていく。
 - ##### 現在の状況が変化した場合は、それに応じて行動計画を変更する。再帰的な処理により、必要に応じて大まかな行動計画も変更できる。
 
-IRADはこれらの行動計画テキストと同時に自身が取得した過去の記憶や現在のステータスなど、様々な要素を加味して目的と現在の状況が類似しているか判断する。
+ARADはこれらの行動計画テキストと同時に自身が取得した過去の記憶や現在のステータスなど、様々な要素を加味して目的と現在の状況が類似しているか判断する。
 
 テキスト形式で行動計画を生成することで、OCR等の文字認識を併用することができる。
 
-### IRADを実現するにあたって:
+### ARADを実現するにあたって:
 - ##### 必要なライブラリ:
     - ###### 画像認識
     - ###### 動作認識
@@ -180,7 +180,7 @@ IRADはこれらの行動計画テキストと同時に自身が取得した過�
 
 ###### 将来的にはテキスト形式に変わる新しい方式をとる。
 
-### IRADの考え方についての例
+### ARADの考え方についての例
 例としてマインクラフトで原木を採取し、木材にクラフトして地面に設置する。というタスクを実行するには、
 
 ### 大まかに
