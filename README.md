@@ -1,5 +1,5 @@
-# ARAD (Action Recognition Action Decision)
-Renamed from Image Recognition Action Decision to Action Recognition Action Decision
+# BRAD (Behavior Recognition Action Decision)
+Renamed from Image Recognition Action Decision to Behavior Recognition Action Decision
   
 ・[--ENGLISH](#english-ver)
 ・[--日本語](#日本語-ver)
@@ -7,39 +7,39 @@ Renamed from Image Recognition Action Decision to Action Recognition Action Deci
 ## ・ENGLISH ver
 (Translated at DeepL)
 # Development Progress
-Currently developing an ARAD to perform the task of cutting down wood in Minecraft.
+Currently developing an BRAD to perform the task of cutting down wood in Minecraft.
   
 - Real-time object detection of trees in Minecraft using YOLO v5.
-- . /ARAD/Codes/Minecraft/Tree/ScreenCapture.py to run
+- . /BRAD/Codes/Minecraft/Tree/ScreenCapture.py to run
   
-- Code being produced to create dataset for motion recognition model.
-- . /ARAD/Codes/Minecraft/Tree/CaptureScreenKeys.py
+- Code being produced to create dataset for behavior recognition model.
+- . /BRAD/Codes/Minecraft/Tree/CaptureScreenKeys.py
   
-## The following is entered as a note about ARAD, as it is still in the design stage.
+## The following is filled in as a memo since we are still in the design phase for BRAD.
 
-### ARAD working procedure:
-- ##### Recognize motion and convert current video data to text from training data and current video data.
+### BRAD working procedure:
+- ##### Recognize actions and convert current video data to text from training data and current video data.
 - ##### Select training data similar to long-term objectives to determine short-term objectives.
-- ##### Determine the short-term objective based on the selected training data. By processing this recursively, the action plan becomes more specific.
+- ##### Determine short-term objectives based on the selected training data. By processing this recursively, the action plan becomes more specific.
 - ##### If the current situation changes, the action plan is modified accordingly. The recursive process also allows the broad action plan to be changed as needed.
 
-ARAD takes into account these action plan texts as well as various factors, such as past memories and current status that it has acquired, to determine whether the objective and current situation are similar.
+BRAD determines whether the objective and current situation are similar by taking into account various factors, such as past memories and current status obtained by BRAD as well as these action plan texts.
 
 By generating action plans in text format, character recognition such as OCR can be used in conjunction.
 
-### In order to implement ARAD:.
+### In order to implement BRAD:.
 - ##### Required libraries:.
     - ###### Image Recognition
-    - ###### Motion Recognition
+    - ###### Action Recognition
     - ###### Character Recognition
 
     The above must be processed accurately and at high speed.
       
     Libraries that can combine all three are desirable.
       
-    It is also necessary to obtain information such as the position of objects in the image.
+    It is also necessary to obtain information such as the location of objects in the image.
       
-    In addition, it is necessary to support time-series correspondence in both.
+    Also, it is necessary to support time-series correspondence in both cases.
 - ##### Model learned to act according to the action plan in the text
     If it is possible to generate plans to the deepest dimension, there is no need for a “model learned to act according to the action plan in the text.” However, to reduce the amount of computation, a model that generates a certain amount of action plans and then acts according to them is necessary.
 - ##### Measuring data similarity
@@ -52,16 +52,16 @@ By generating action plans in text format, character recognition such as OCR can
 - Can be applied as an auxiliary tool for humans to tell them appropriate action plans for the future.
 
 ### Disadvantages of action planning in text format
-- Likely to lose information for a variety of reasons, including low dimensionality of the action plan and accuracy of motion recognition
+- Likely to lose information for a variety of reasons, including low dimensionality of the action plan and accuracy of action recognition
 - Data volume may increase due to pre-determination of future action plans.
 -As for the above, it is possible to save processing and data volume by inferring the near future action plan to a deep dimension and only inferring the far future action plan roughly.
 
 ###### In the future, a new method will be adopted to replace the text format.
 
-### Example of the ARAD concept
+### Example of the BRAD concept
 As an example, in Minecraft, logs are collected, crafted into wood, and placed on the ground. To perform the task of,
 
-### Roughly.
+### Roughly
 
 ---
 - Go near the tree
@@ -107,22 +107,21 @@ As the plan of action becomes more detailed, eventually keystrokes become the lo
     - Place the wood
         - Right click.
         - Confirm that the wood is placed.
----
-
-### Problems at the moment: 
-- Variety of motion recognition for objects and events
+---Right-click to confirm wood is placed.
+### Problems at this point:
+- Variability in behavior recognition for objects and events.
 - Combining multiple AIs may result in poor learning.
 
 ---
-### Notes.
-Even if things do not go according to the action plan, the action plan is variable depending on the situation, so it can cope with any situation.
+### Notes
+Even if things do not go according to the action plan, the action plan is variable depending on the situation, and can cope with any situation.
 The actions are selected based on the learning data that is similar to the current action history.
 Similarities are identified for each dimension.
 After executing the selected action plan, the system learns based on the difference in movement from the data for learning. (Compare with action plans of higher dimensions)
 If the result is contrary to the ideal action, the probability of that action being selected is reduced.
-The AI that executes the action also learns based on the reproducibility of the action plan. (Compare with the lower dimensional action plan) <- Not necessary if the behavior recognition is perfect.
-If there is enough data and technology for behavior recognition, it is possible to learn by imitation using only behavior recognition.
-It will be possible to convert events to text data as data compression.
+The AI that executes the action also learns based on the reproducibility of the action plan. (Compare with lower dimensional action plans) <- Not necessary if action recognition is perfect.
+If the action recognition technology and data are sufficient, imitation learning is possible with action recognition alone.
+It will be possible to convert the events that occurred to text data as data compression.
 For the behavior recognition model, classify without specifying the number of labels.
 If possible, we would like to use a model that can automatically assign labels using unsupervised learning.
 
@@ -130,30 +129,30 @@ If possible, we would like to use a model that can automatically assign labels u
 # ・日本語 ver
 
 # 開発の進捗
-現在マインクラフトで木材を伐採するタスクを実行するためのARADを開発中
+現在マインクラフトで木材を伐採するタスクを実行するためのBRADを開発中
   
 - YOLO v5 を使用してマインクラフト内の木をリアルタイムで物体検出した。
-- ./ARAD/Codes/Minecraft/Tree/ScreenCapture.py から実行可能
+- ./BRAD/Codes/Minecraft/Tree/ScreenCapture.py から実行可能
   
-- 動作認識モデル用のデータセットを作成するコードを製作中
-- ./ARAD/Codes/Minecraft/Tree/CaptureScreenKeys.py から実行可能
+- 行動認識モデル用のデータセットを作成するコードを製作中
+- ./BRAD/Codes/Minecraft/Tree/CaptureScreenKeys.py から実行可能
   
-## ARADについてはまだ設計段階なので、下記はメモとして記入している。
+## BRADについてはまだ設計段階なので、下記はメモとして記入している。
 
-### ARADの動作手順：
-- ##### 学習用データと現在の映像データを動作認識してテキストに変換する。
+### BRADの動作手順：
+- ##### 学習用データと現在の映像データを行動認識してテキストに変換する。
 - ##### 短期的な目的を決定するために、長期的な目的と類似した学習データを選択する。
 - ##### 選択した学習データを元に、短期的な目的を決定する。これを再帰的に処理することで、行動計画が具体的になっていく。
 - ##### 現在の状況が変化した場合は、それに応じて行動計画を変更する。再帰的な処理により、必要に応じて大まかな行動計画も変更できる。
 
-ARADはこれらの行動計画テキストと同時に自身が取得した過去の記憶や現在のステータスなど、様々な要素を加味して目的と現在の状況が類似しているか判断する。
+BRADはこれらの行動計画テキストと同時に自身が取得した過去の記憶や現在のステータスなど、様々な要素を加味して目的と現在の状況が類似しているか判断する。
 
 テキスト形式で行動計画を生成することで、OCR等の文字認識を併用することができる。
 
-### ARADを実現するにあたって:
+### BRADを実現するにあたって:
 - ##### 必要なライブラリ:
     - ###### 画像認識
-    - ###### 動作認識
+    - ###### 行動認識
     - ###### 文字認識
 
     上記を高精度かつ高速で処理する必要がある。
@@ -175,13 +174,13 @@ ARADはこれらの行動計画テキストと同時に自身が取得した過�
 - 将来の適切な行動計画を教えてくれる人間の補助的なツールにも応用できる。
 
 ### テキスト形式で行動計画を立てるデメリット
-- 行動計画の次元の低さ、動作認識の精度など、様々な理由により情報を喪失してしまう可能性が高い
+- 行動計画の次元の低さ、行動認識の精度など、様々な理由により情報を喪失してしまう可能性が高い
 - 今後の行動予定をあらかじめ決定しておくため、データ容量が大きくなる可能性がある。
 -上記に関しては近い未来の行動計画は深い次元まで推論し、遠い未来の行動計画は大まかな推論にとどめる事で処理やデータ量を節約することができる。
 
 ###### 将来的にはテキスト形式に変わる新しい方式をとる。
 
-### ARADの考え方についての例
+### BRADの考え方についての例
 例としてマインクラフトで原木を採取し、木材にクラフトして地面に設置する。というタスクを実行するには、
 
 ### 大まかに
@@ -232,7 +231,7 @@ ARADはこれらの行動計画テキストと同時に自身が取得した過�
         - 木材が置かれたことを確認する。
 ---
 ### 現時点での問題点:
-- 物体、事象に対する動作認識の多様性
+- 物体、事象に対する行動認識の多様性
 - 複数のAIを組み合わせることにより、学習がうまく進まなくなる可能性
 
 ---
@@ -242,8 +241,8 @@ ARADはこれらの行動計画テキストと同時に自身が取得した過�
 次元ごとに類似点を見極める。
 選択した行動計画を実行した後、学習用データとの動きの差分を元に学習する。(より高次元の行動計画と照らし合わせる)
 理想の行動と反した結果になった場合、その行動が選択される確率を低くする。
-行動を実行する側のAIも行動計画の再現度を元に学習する。(より低次元の行動計画と照らし合わせる) <-動作認識が完璧にできれば必要ない。
-動作認識技術とデータが十分にあれば、動作認識のみで模倣学習が可能。
+行動を実行する側のAIも行動計画の再現度を元に学習する。(より低次元の行動計画と照らし合わせる) <-行動認識が完璧にできれば必要ない。
+行動認識技術とデータが十分にあれば、行動認識のみで模倣学習が可能。
 データの圧縮として起きた事象をテキストデータに変換することができるようになる。
-動作認識モデルについて、ラベルの個数を指定せずに分類をする。
+行動認識モデルについて、ラベルの個数を指定せずに分類をする。
 可能なら教師なし学習を使用して自動的にラベルを付与することができるモデルを使用したい。
