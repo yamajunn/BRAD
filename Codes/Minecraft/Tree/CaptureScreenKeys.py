@@ -7,11 +7,9 @@ from pynput import keyboard, mouse
 from PIL import Image, ImageGrab
 import pyautogui
 
-# カーソル画像を指定
 cursor_image_path = './Codes/Minecraft/Tree/clipart.png'
 cursor_img = Image.open(cursor_image_path).convert("RGBA")
 
-# CSVファイルを開き、ライターを作成
 csv_file = open('./Codes/Minecraft/Tree/Datas/Input/input_log.csv', mode='w', newline='')
 csv_writer = csv.writer(csv_file)
 csv_writer.writerow(['timestamp', 'device', 'event', 'detail'])
@@ -19,9 +17,8 @@ print("CSV file opened and header written")
 
 pressed_keys = set()
 pressed_buttons = set()
-running = True  # 実行中のフラグ
+running = True
 
-# コールバック関数
 def on_key_press(key):
     global running
     if key == keyboard.KeyCode.from_char('q'):
@@ -79,7 +76,6 @@ def on_scroll(x, y, dx, dy):
     csv_file.flush()
     print(f"Mouse scrolled at ({x}, {y}) with delta ({dx}, {dy})")
 
-# スクリーンショットを動画形式で保存する関数
 def capture_video():
     fourcc = cv2.VideoWriter_fourcc(*'mp4v')
     final_video_path = './Codes/Minecraft/Tree/Datas/Video/output.mp4'
@@ -91,7 +87,6 @@ def capture_video():
         current_time = time.time()
         elapsed_time = current_time - start_time
 
-        # 30FPSのフレームごとの目標時間
         target_time = 1 / 30
 
         if elapsed_time > len(frames) * target_time:
@@ -123,15 +118,12 @@ def capture_video():
     out_final.release()
     print(f"Final video saved with duration: {actual_duration} seconds and FPS: {fps}")
 
-# スクリーンキャプチャを別スレッドで実行
 video_thread = threading.Thread(target=capture_video)
 video_thread.start()
 
-# リスナーを作成
 keyboard_listener = keyboard.Listener(on_press=on_key_press, on_release=on_key_release)
 mouse_listener = mouse.Listener(on_click=on_click, on_move=on_move, on_scroll=on_scroll)
 
-# リスナーを開始
 keyboard_listener.start()
 mouse_listener.start()
 
