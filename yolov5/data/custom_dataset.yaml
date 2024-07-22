@@ -1,0 +1,6 @@
+# custom_dataset.yaml
+train: ../Datasets/Minecraft/TreeYOLO/train/images
+val: ../Datasets/Minecraft/TreeYOLO/val/images
+
+nc: 12  # クラス数
+names: ['acacia', 'acacia_log', 'birch', 'birch_log', 'dark_oak', 'dark_oak_log', 'jungle', 'jungle_log', 'oak', 'oak_log', 'spruce', 'spruce_log']  # クラス名
