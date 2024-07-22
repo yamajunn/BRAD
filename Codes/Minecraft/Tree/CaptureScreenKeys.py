@@ -82,20 +82,26 @@ def capture_video():
 
     frames = []
     start_time = time.time()
+    target_fps = 60
+    target_time = 1 / target_fps
 
     while running:
         current_time = time.time()
         elapsed_time = current_time - start_time
-
-        target_time = 1 / 30
 
         if elapsed_time > len(frames) * target_time:
             img = ImageGrab.grab()
             img_np = np.array(img)
             img_bgr = cv2.cvtColor(img_np, cv2.COLOR_RGB2BGR)
 
+            # カーソル位置の取得と修正
+            screen_width, screen_height = pyautogui.size()
             cursor_x, cursor_y = pyautogui.position()
-            cursor_resized = cursor_img.resize((10, 15), Image.LANCZOS)
+
+            cursor_x = int(cursor_x * img_bgr.shape[1] / screen_width)
+            cursor_y = int(cursor_y * img_bgr.shape[0] / screen_height)
+
+            cursor_resized = cursor_img.resize((20, 20), Image.LANCZOS)
             cursor_img_np = np.array(cursor_resized)
 
             cursor_x = min(cursor_x, img_bgr.shape[1] - cursor_img_np.shape[1])
@@ -109,14 +115,16 @@ def capture_video():
             frames.append(img_bgr)
 
     actual_duration = time.time() - start_time
-    fps = len(frames) / actual_duration
-    out_final = cv2.VideoWriter(final_video_path, fourcc, fps, (1920, 1080))
+    if frames:
+        height, width, layers = frames[0].shape
+        fps = len(frames) / actual_duration
+        out_final = cv2.VideoWriter(final_video_path, fourcc, fps, (width, height))
 
-    for frame in frames:
-        out_final.write(frame)
+        for frame in frames:
+            out_final.write(frame)
 
-    out_final.release()
-    print(f"Final video saved with duration: {actual_duration} seconds and FPS: {fps}")
+        out_final.release()
+        print(f"Final video saved with duration: {actual_duration} seconds and FPS: {fps}")
 
 video_thread = threading.Thread(target=capture_video)
 video_thread.start()
