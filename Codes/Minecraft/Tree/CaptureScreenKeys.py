@@ -76,23 +76,26 @@ def on_scroll(x, y, dx, dy):
     csv_file.flush()
     print(f"Mouse scrolled at ({x}, {y}) with delta ({dx}, {dy})")
 
-def capture_video():
+def capture_frame(queue):
+    while running:
+        start_time = time.time()
+        img = ImageGrab.grab()
+        img_np = np.array(img)
+        img_bgr = cv2.cvtColor(img_np, cv2.COLOR_RGB2BGR)
+        queue.append((time.time(), img_bgr))
+        # target_fpsを考慮してsleepする
+        elapsed_time = time.time() - start_time
+        time.sleep(max(1/60 - elapsed_time, 0))
+
+def process_frame(queue):
     fourcc = cv2.VideoWriter_fourcc(*'mp4v')
     final_video_path = './Codes/Minecraft/Tree/Datas/Video/output.mp4'
-
     frames = []
     start_time = time.time()
-    target_fps = 60
-    target_time = 1 / target_fps
 
-    while running:
-        current_time = time.time()
-        elapsed_time = current_time - start_time
-
-        if elapsed_time > len(frames) * target_time:
-            img = ImageGrab.grab()
-            img_np = np.array(img)
-            img_bgr = cv2.cvtColor(img_np, cv2.COLOR_RGB2BGR)
+    while running or queue:
+        if queue:
+            timestamp, img_bgr = queue.pop(0)
 
             # カーソル位置の取得と修正
             screen_width, screen_height = pyautogui.size()
@@ -101,7 +104,6 @@ def capture_video():
             cursor_x = int(cursor_x * img_bgr.shape[1] / screen_width)
             cursor_y = int(cursor_y * img_bgr.shape[0] / screen_height)
 
-            # cursor_resized = cursor_img.resize((20, 20), Image.LANCZOS)
             cursor_resized = cursor_img.resize((10, 17), Image.LANCZOS)
             cursor_img_np = np.array(cursor_resized)
 
@@ -127,8 +129,11 @@ def capture_video():
         out_final.release()
         print(f"Final video saved with duration: {actual_duration} seconds and FPS: {fps}")
 
-video_thread = threading.Thread(target=capture_video)
-video_thread.start()
+frame_queue = []
+capture_thread = threading.Thread(target=capture_frame, args=(frame_queue,))
+process_thread = threading.Thread(target=process_frame, args=(frame_queue,))
+capture_thread.start()
+process_thread.start()
 
 keyboard_listener = keyboard.Listener(on_press=on_key_press, on_release=on_key_release)
 mouse_listener = mouse.Listener(on_click=on_click, on_move=on_move, on_scroll=on_scroll)
@@ -138,6 +143,7 @@ mouse_listener.start()
 
 keyboard_listener.join()
 mouse_listener.stop()
-video_thread.join()
+capture_thread.join()
+process_thread.join()
 csv_file.close()
 print("Listeners stopped and CSV file closed")
