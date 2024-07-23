@@ -101,7 +101,8 @@ def capture_video():
             cursor_x = int(cursor_x * img_bgr.shape[1] / screen_width)
             cursor_y = int(cursor_y * img_bgr.shape[0] / screen_height)
 
-            cursor_resized = cursor_img.resize((20, 20), Image.LANCZOS)
+            # cursor_resized = cursor_img.resize((20, 20), Image.LANCZOS)
+            cursor_resized = cursor_img.resize((10, 17), Image.LANCZOS)
             cursor_img_np = np.array(cursor_resized)
 
             cursor_x = min(cursor_x, img_bgr.shape[1] - cursor_img_np.shape[1])
