@@ -3,7 +3,6 @@ from datetime import datetime
 import pickle
 
 def load_data():
-    # CSVデータの読み込み
     df = pd.read_csv('./Codes/Minecraft/Tree/Datas/Input/input_log.csv')
     df['timestamp'] = pd.to_datetime(df['timestamp'], unit='s')
     return df
@@ -28,11 +27,11 @@ def read_video_frames(video_path):
     cap.release()
     return frames, timestamps
 
-def save_variables(variables, filename='./Codes/Minecraft/Tree/Files/variables.pkl'):
+def save_variables(variables, filename='./Codes/Minecraft/Tree/Datas/variables.pkl'):
     with open(filename, 'wb') as f:
         pickle.dump(variables, f)
 
-def load_variables(filename='./Codes/Minecraft/Tree/Files/variables.pkl'):
+def load_variables(filename='./Codes/Minecraft/Tree/Datas/variables.pkl'):
     with open(filename, 'rb') as f:
         return pickle.load(f)
 

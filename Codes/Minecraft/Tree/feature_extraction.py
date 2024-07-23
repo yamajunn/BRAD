@@ -35,7 +35,7 @@ def create_features(df, frame_timestamps):
     
     return X, features_df
 
-def save_features(features_df, X, filename='./Codes/Minecraft/Tree/Files/variables.pkl'):
+def save_features(features_df, X, filename='./Codes/Minecraft/Tree/Datas/variables.pkl'):
     variables = {
         'features_df': features_df,
         'X': X
@@ -44,7 +44,7 @@ def save_features(features_df, X, filename='./Codes/Minecraft/Tree/Files/variabl
         pickle.dump(variables, f)
 
 if __name__ == "__main__":
-    with open('./Codes/Minecraft/Tree/Files/variables.pkl', 'rb') as f:
+    with open('./Codes/Minecraft/Tree/Datas/variables.pkl', 'rb') as f:
         variables = pickle.load(f)
     
     df = variables['df']
