@@ -129,7 +129,6 @@ def process_frame(queue):
         out_final.release()
         print(f"Final video saved with duration: {actual_duration} seconds and FPS: {fps}")
 
-
 frame_queue = []
 capture_thread = threading.Thread(target=capture_frame, args=(frame_queue,))
 process_thread = threading.Thread(target=process_frame, args=(frame_queue,))
