@@ -31,7 +31,7 @@ if __name__ == "__main__":
     X = variables['X']
     features_df = variables['features_df']
 
-    n_clusters = min(len(X), 3)  # クラスタ数をデータポイント数以下に設定
+    n_clusters = min(len(X), 100)  # クラスタ数をデータポイント数以下に設定
     if n_clusters < 2:
         n_clusters = 2  # 最低2クラスタとする
 
