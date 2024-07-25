@@ -116,27 +116,6 @@ def process_frame(queue):
             cv2.imwrite(frame_path, img_bgr)
             # print(f"Frame {index} saved as {frame_path}")
 
-def create_video_from_frames():
-    frame_folder = './Codes/Minecraft/Tree/Datas/Frames/'
-    final_video_path = './Codes/Minecraft/Tree/Datas/Video/output.mp4'
-    frame_paths = sorted([os.path.join(frame_folder, f) for f in os.listdir(frame_folder) if f.endswith('.png')])
-
-    if not frame_paths:
-        print("No frames found to create video")
-        return
-
-    first_frame = cv2.imread(frame_paths[0])
-    height, width, layers = first_frame.shape
-    fourcc = cv2.VideoWriter_fourcc(*'mp4v')
-    out_final = cv2.VideoWriter(final_video_path, fourcc, 30, (width, height))
-
-    for frame_path in frame_paths:
-        frame = cv2.imread(frame_path)
-        out_final.write(frame)
-
-    out_final.release()
-    print(f"Final video saved as {final_video_path}")
-
 frame_queue = []
 capture_thread = threading.Thread(target=capture_frame, args=(frame_queue,))
 process_thread = threading.Thread(target=process_frame, args=(frame_queue,))
@@ -155,5 +134,3 @@ capture_thread.join()
 process_thread.join()
 csv_file.close()
 print("Listeners stopped and CSV file closed")
-
-create_video_from_frames()
