@@ -114,7 +114,7 @@ def process_frame(queue):
 
             frame_path = f'./Codes/Minecraft/Tree/Datas/Frames/frame_{index:05d}.png'
             cv2.imwrite(frame_path, img_bgr)
-            print(f"Frame {index} saved as {frame_path}")
+            # print(f"Frame {index} saved as {frame_path}")
 
 def create_video_from_frames():
     frame_folder = './Codes/Minecraft/Tree/Datas/Frames/'
