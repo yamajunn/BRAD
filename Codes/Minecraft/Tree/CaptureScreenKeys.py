@@ -7,6 +7,7 @@ from pynput import keyboard, mouse
 from PIL import Image, ImageGrab
 import pyautogui
 import os
+import json
 
 cursor_image_path = './Codes/Minecraft/Tree/clipart.png'
 cursor_img = Image.open(cursor_image_path).convert("RGBA")
@@ -20,6 +21,8 @@ pressed_keys = set()
 pressed_buttons = set()
 running = True
 frame_index = 0
+
+start_time = time.time()  # 開始時間の記録
 
 def on_key_press(key):
     global running
@@ -114,7 +117,14 @@ def process_frame(queue):
 
             frame_path = f'./Codes/Minecraft/Tree/Datas/Frames/frame_{index:05d}.png'
             cv2.imwrite(frame_path, img_bgr)
-            # print(f"Frame {index} saved as {frame_path}")
+            print(f"Frame {index} saved as {frame_path}")
+
+def save_total_capture_time(start, end):
+    total_time = end - start
+    time_data = {"total_capture_time": total_time}
+    with open('./Codes/Minecraft/Tree/Datas/Input/capture_time.json', 'w') as f:
+        json.dump(time_data, f, indent=4)
+    print("Total capture time saved to capture_time.json")
 
 frame_queue = []
 capture_thread = threading.Thread(target=capture_frame, args=(frame_queue,))
@@ -134,3 +144,6 @@ capture_thread.join()
 process_thread.join()
 csv_file.close()
 print("Listeners stopped and CSV file closed")
+
+end_time = time.time()  # 終了時間の記録
+save_total_capture_time(start_time, end_time)
