@@ -12,7 +12,7 @@ image = cv2.imread(image_path)
 
 # 画像が正常に読み込まれたか確認する
 if image is None:
-    print(f"指定されたファイル {image_path} が見つかりません")
+    print(f"指定されたファイル {image_path} が見つかりません。ファイルパスを確認してください。")
     exit()
 
 # 色空間の変換
@@ -25,11 +25,13 @@ results = pose.process(image_rgb)
 if results.pose_landmarks:
     mp_draw.draw_landmarks(image, results.pose_landmarks, mp_pose.POSE_CONNECTIONS)
 
-# 結果の表示
+# 画像を表示
 cv2.imshow('Pose Detection', image)
 
-# ユーザーがキーを押すまで待機する
-cv2.waitKey(0)
+# ウィンドウが表示されるまで待機する
+key = cv2.waitKey(0)
+if key == -1:
+    print("キー入力がありません。ウィンドウが表示されていない可能性があります。")
 
 # ウィンドウを閉じる
 cv2.destroyAllWindows()
