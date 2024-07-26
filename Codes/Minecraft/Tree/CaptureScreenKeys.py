@@ -7,6 +7,7 @@ from pynput import keyboard, mouse
 from PIL import Image, ImageGrab
 import pyautogui
 import os
+import json
 
 cursor_image_path = './Codes/Minecraft/Tree/clipart.png'
 cursor_img = Image.open(cursor_image_path).convert("RGBA")
@@ -18,13 +19,15 @@ print("CSV file opened and header written")
 
 pressed_keys = set()
 pressed_buttons = set()
-running = True
+running = threading.Event()
+running.set()  # スレッドの実行フラグを立てる
 frame_index = 0
 
+start_time = time.time()  # 開始時間の記録
+
 def on_key_press(key):
-    global running
     if key == keyboard.KeyCode.from_char('q'):
-        running = False
+        running.clear()  # スレッドの実行フラグを下げる
         return False
     if key not in pressed_keys:
         pressed_keys.add(key)
@@ -48,7 +51,7 @@ def on_key_release(key):
         print(f"Key released: {key}")
 
 def on_click(x, y, button, pressed):
-    if not running:
+    if not running.is_set():
         return
     timestamp = time.time()
     if pressed:
@@ -63,7 +66,7 @@ def on_click(x, y, button, pressed):
     csv_file.flush()
 
 def on_move(x, y):
-    if not running:
+    if not running.is_set():
         return
     timestamp = time.time()
     csv_writer.writerow([timestamp, 'mouse', 'move', f'({x}, {y})'])
@@ -71,7 +74,7 @@ def on_move(x, y):
     print(f"Mouse moved to ({x}, {y})")
 
 def on_scroll(x, y, dx, dy):
-    if not running:
+    if not running.is_set():
         return
     timestamp = time.time()
     csv_writer.writerow([timestamp, 'mouse', 'scroll', f'({x}, {y}) {dx} {dy}'])
@@ -80,7 +83,7 @@ def on_scroll(x, y, dx, dy):
 
 def capture_frame(queue):
     global frame_index
-    while running:
+    while running.is_set():
         start_time = time.time()
         img = ImageGrab.grab()
         img_np = np.array(img)
@@ -91,7 +94,7 @@ def capture_frame(queue):
         time.sleep(max(1/60 - elapsed_time, 0))
 
 def process_frame(queue):
-    while running or queue:
+    while running.is_set() or queue:
         if queue:
             timestamp, img_bgr, index = queue.pop(0)
 
@@ -116,44 +119,38 @@ def process_frame(queue):
             cv2.imwrite(frame_path, img_bgr)
             # print(f"Frame {index} saved as {frame_path}")
 
-def create_video_from_frames():
-    frame_folder = './Codes/Minecraft/Tree/Datas/Frames/'
-    final_video_path = './Codes/Minecraft/Tree/Datas/Video/output.mp4'
-    frame_paths = sorted([os.path.join(frame_folder, f) for f in os.listdir(frame_folder) if f.endswith('.png')])
+def save_total_capture_time(start, end):
+    total_time = end - start
+    time_data = {"total_capture_time": total_time}
+    with open('./Codes/Minecraft/Tree/Datas/Input/capture_time.json', 'w') as f:
+        json.dump(time_data, f, indent=4)
+    print("Total capture time saved to capture_time.json")
 
-    if not frame_paths:
-        print("No frames found to create video")
-        return
+def main():
+    frame_queue = []
+    capture_thread = threading.Thread(target=capture_frame, args=(frame_queue,))
+    process_thread = threading.Thread(target=process_frame, args=(frame_queue,))
+    capture_thread.start()
+    process_thread.start()
 
-    first_frame = cv2.imread(frame_paths[0])
-    height, width, layers = first_frame.shape
-    fourcc = cv2.VideoWriter_fourcc(*'mp4v')
-    out_final = cv2.VideoWriter(final_video_path, fourcc, 30, (width, height))
+    keyboard_listener = keyboard.Listener(on_press=on_key_press, on_release=on_key_release)
+    mouse_listener = mouse.Listener(on_click=on_click, on_move=on_move, on_scroll=on_scroll)
 
-    for frame_path in frame_paths:
-        frame = cv2.imread(frame_path)
-        out_final.write(frame)
+    keyboard_listener.start()
+    mouse_listener.start()
 
-    out_final.release()
-    print(f"Final video saved as {final_video_path}")
+    try:
+        keyboard_listener.join()
+    except KeyboardInterrupt:
+        running.clear()
 
-frame_queue = []
-capture_thread = threading.Thread(target=capture_frame, args=(frame_queue,))
-process_thread = threading.Thread(target=process_frame, args=(frame_queue,))
-capture_thread.start()
-process_thread.start()
+    capture_thread.join()
+    process_thread.join()
+    csv_file.close()
+    print("Listeners stopped and CSV file closed")
 
-keyboard_listener = keyboard.Listener(on_press=on_key_press, on_release=on_key_release)
-mouse_listener = mouse.Listener(on_click=on_click, on_move=on_move, on_scroll=on_scroll)
+    end_time = time.time()  # 終了時間の記録
+    save_total_capture_time(start_time, end_time)
 
-keyboard_listener.start()
-mouse_listener.start()
-
-keyboard_listener.join()
-mouse_listener.stop()
-capture_thread.join()
-process_thread.join()
-csv_file.close()
-print("Listeners stopped and CSV file closed")
-
-create_video_from_frames()
+if __name__ == "__main__":
+    main()
