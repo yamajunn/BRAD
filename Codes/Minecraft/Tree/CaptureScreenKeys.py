@@ -19,15 +19,15 @@ print("CSV file opened and header written")
 
 pressed_keys = set()
 pressed_buttons = set()
-running = True
+running = threading.Event()
+running.set()  # スレッドの実行フラグを立てる
 frame_index = 0
 
 start_time = time.time()  # 開始時間の記録
 
 def on_key_press(key):
-    global running
     if key == keyboard.KeyCode.from_char('q'):
-        running = False
+        running.clear()  # スレッドの実行フラグを下げる
         return False
     if key not in pressed_keys:
         pressed_keys.add(key)
@@ -51,7 +51,7 @@ def on_key_release(key):
         print(f"Key released: {key}")
 
 def on_click(x, y, button, pressed):
-    if not running:
+    if not running.is_set():
         return
     timestamp = time.time()
     if pressed:
@@ -66,7 +66,7 @@ def on_click(x, y, button, pressed):
     csv_file.flush()
 
 def on_move(x, y):
-    if not running:
+    if not running.is_set():
         return
     timestamp = time.time()
     csv_writer.writerow([timestamp, 'mouse', 'move', f'({x}, {y})'])
@@ -74,7 +74,7 @@ def on_move(x, y):
     print(f"Mouse moved to ({x}, {y})")
 
 def on_scroll(x, y, dx, dy):
-    if not running:
+    if not running.is_set():
         return
     timestamp = time.time()
     csv_writer.writerow([timestamp, 'mouse', 'scroll', f'({x}, {y}) {dx} {dy}'])
@@ -83,7 +83,7 @@ def on_scroll(x, y, dx, dy):
 
 def capture_frame(queue):
     global frame_index
-    while running:
+    while running.is_set():
         start_time = time.time()
         img = ImageGrab.grab()
         img_np = np.array(img)
@@ -94,7 +94,7 @@ def capture_frame(queue):
         time.sleep(max(1/60 - elapsed_time, 0))
 
 def process_frame(queue):
-    while running or queue:
+    while running.is_set() or queue:
         if queue:
             timestamp, img_bgr, index = queue.pop(0)
 
@@ -117,7 +117,7 @@ def process_frame(queue):
 
             frame_path = f'./Codes/Minecraft/Tree/Datas/Frames/frame_{index:05d}.png'
             cv2.imwrite(frame_path, img_bgr)
-            print(f"Frame {index} saved as {frame_path}")
+            # print(f"Frame {index} saved as {frame_path}")
 
 def save_total_capture_time(start, end):
     total_time = end - start
@@ -126,24 +126,31 @@ def save_total_capture_time(start, end):
         json.dump(time_data, f, indent=4)
     print("Total capture time saved to capture_time.json")
 
-frame_queue = []
-capture_thread = threading.Thread(target=capture_frame, args=(frame_queue,))
-process_thread = threading.Thread(target=process_frame, args=(frame_queue,))
-capture_thread.start()
-process_thread.start()
+def main():
+    frame_queue = []
+    capture_thread = threading.Thread(target=capture_frame, args=(frame_queue,))
+    process_thread = threading.Thread(target=process_frame, args=(frame_queue,))
+    capture_thread.start()
+    process_thread.start()
 
-keyboard_listener = keyboard.Listener(on_press=on_key_press, on_release=on_key_release)
-mouse_listener = mouse.Listener(on_click=on_click, on_move=on_move, on_scroll=on_scroll)
+    keyboard_listener = keyboard.Listener(on_press=on_key_press, on_release=on_key_release)
+    mouse_listener = mouse.Listener(on_click=on_click, on_move=on_move, on_scroll=on_scroll)
 
-keyboard_listener.start()
-mouse_listener.start()
+    keyboard_listener.start()
+    mouse_listener.start()
 
-keyboard_listener.join()
-mouse_listener.stop()
-capture_thread.join()
-process_thread.join()
-csv_file.close()
-print("Listeners stopped and CSV file closed")
+    try:
+        keyboard_listener.join()
+    except KeyboardInterrupt:
+        running.clear()
 
-end_time = time.time()  # 終了時間の記録
-save_total_capture_time(start_time, end_time)
+    capture_thread.join()
+    process_thread.join()
+    csv_file.close()
+    print("Listeners stopped and CSV file closed")
+
+    end_time = time.time()  # 終了時間の記録
+    save_total_capture_time(start_time, end_time)
+
+if __name__ == "__main__":
+    main()
