@@ -1,0 +1,49 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "build debug",
+            "type": "shell",
+            "command": "cmd.exe",
+            "args": [
+                "/c",
+                "cl.exe",
+                "/EHsc",
+                "/Zi",
+                "/Fe${workspaceFolder}\\${fileBasenameNoExtension}.exe",
+                "/I\"C:\\Program Files (x86)\\Microsoft Visual Studio\\2022\\BuildTools\\VC\\Tools\\MSVC\\14.40.33807\\include\"",
+                "/I\"C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\ucrt\"",
+                "/I\"C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\shared\"",
+                "${file}"
+            ],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "problemMatcher": ["$msCompile"],
+            "detail": "Generated task by VSCode."
+        },
+        {
+            "label": "build release",
+            "type": "shell",
+            "command": "cmd.exe",
+            "args": [
+                "/c",
+                "cl.exe",
+                "/EHsc",
+                "/O2",
+                "/Fe${workspaceFolder}\\${fileBasenameNoExtension}.exe",
+                "/I\"C:\\Program Files (x86)\\Microsoft Visual Studio\\2022\\BuildTools\\VC\\Tools\\MSVC\\14.40.33807\\include\"",
+                "/I\"C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\ucrt\"",
+                "/I\"C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\shared\"",
+                "${file}"
+            ],
+            "group": {
+                "kind": "build",
+                "isDefault": false
+            },
+            "problemMatcher": ["$msCompile"],
+            "detail": "Generated task by VSCode."
+        }
+    ]
+}
