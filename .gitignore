@@ -3,3 +3,6 @@
 *.pkl
 .DS_Store
 *.png
+*.txt
+*.json
+.vs
