@@ -5,7 +5,8 @@ import os
 from PIL import Image, ImageGrab
 from PIL.Image import Resampling
 from pynput import mouse, keyboard
-from threading import Thread
+from threading import Thread, Lock
+from queue import Queue
 
 # パスの設定
 frame_dir = './Codes/Minecraft/Tree/Datas/Frames/'
@@ -18,7 +19,7 @@ os.makedirs(frame_dir, exist_ok=True)
 
 # マウスカーソル画像の読み込みとサイズ変更
 cursor_img = Image.open(cursor_img_path)
-cursor_img = cursor_img.resize((30//8, 40//8), Resampling.LANCZOS)
+cursor_img = cursor_img.resize((16, 16), Resampling.LANCZOS)  # 16x16にリサイズ
 
 # グローバル変数の設定
 key_logs = []
@@ -28,6 +29,8 @@ last_time = time.time()
 stop_program = False
 key_states = {}
 last_activity_time = time.time()
+image_queue = Queue()
+image_lock = Lock()
 
 # 角度を10度刻みで記録するための関数
 def get_nearest_angle(dx, dy):
@@ -38,44 +41,50 @@ def get_nearest_angle(dx, dy):
 def get_scaled_cursor_position(cursor_pos, orig_size, new_size):
     scale_x = new_size[0] / orig_size[0]
     scale_y = new_size[1] / orig_size[1]
-    return (int(cursor_pos[0] * scale_x * 2), int(cursor_pos[1] * scale_y * 2))
-
-# スクリーンキャプチャと画像の保存
-def save_image(img, timestamp):
-    try:
-        img.save(os.path.join(frame_dir, f'screenshot_{timestamp}.png'))
-    except Exception as e:
-        print(f"Error saving screenshot: {e}")
+    return (int(cursor_pos[0] * scale_x), int(cursor_pos[1] * scale_y))
 
 # スクリーンキャプチャと画像の保存
 def capture_screen():
     global last_time
     while not stop_program:
         current_time = time.time()
-        try:
-            # スクリーンキャプチャ
-            img = ImageGrab.grab()
-            orig_size = img.size
-            # 画像の解像度を1/8に下げる
-            new_size = (int(orig_size[0] // 8), int(orig_size[1] // 8))
-            img = img.resize(new_size, Resampling.LANCZOS)
-            
-            # マウスカーソルの合成位置をスケーリング
-            scaled_cursor_position = get_scaled_cursor_position(last_mouse_position, orig_size, new_size)
-            
-            # カーソル画像を中央に配置
-            cursor_position = (scaled_cursor_position[0] - cursor_img.width // 2, scaled_cursor_position[1] - cursor_img.height // 2)
-            
-            img.paste(cursor_img, cursor_position, cursor_img)
-            
-            # 保存
-            img.save(os.path.join(frame_dir, f'screenshot_{int(current_time * 1000)}.png'))
-        except Exception as e:
-            print(f"Error saving screenshot: {e}")
+        if current_time - last_time >= 0.0625:  # キャプチャの間隔を0.0625秒に設定
+            last_time = current_time
+            try:
+                # スクリーンキャプチャ
+                img = ImageGrab.grab()
+                orig_size = img.size
+                new_size = (orig_size[0] // 8, orig_size[1] // 8)
+                img = img.resize(new_size, Resampling.LANCZOS)
+                
+                # マウスカーソルの合成位置をスケーリング
+                scaled_cursor_position = get_scaled_cursor_position(last_mouse_position, orig_size, new_size)
+                
+                # カーソル画像を中央に配置
+                cursor_position = (scaled_cursor_position[0] - cursor_img.width // 2, scaled_cursor_position[1] - cursor_img.height // 2)
+                
+                img.paste(cursor_img, cursor_position, cursor_img)
+                
+                # 画像をキューに追加
+                with image_lock:
+                    image_queue.put((img, int(current_time * 1000)))
+            except Exception as e:
+                print(f"Error capturing screenshot: {e}")
 
-        # キャプチャの間隔を短縮
-        time.sleep(0.01)
-
+def save_images():
+    while not stop_program or not image_queue.empty():
+        batch_size = 10
+        batch = []
+        with image_lock:
+            while not image_queue.empty() and len(batch) < batch_size:
+                batch.append(image_queue.get())
+        
+        if batch:
+            for img, timestamp in batch:
+                try:
+                    img.save(os.path.join(frame_dir, f'screenshot_{timestamp}.png'))
+                except Exception as e:
+                    print(f"Error saving screenshot: {e}")
 
 # キー入力の記録
 def on_press(key):
@@ -133,17 +142,21 @@ def log_no_activity():
     global last_activity_time
     while not stop_program:
         current_time = time.time()
-        if current_time - last_activity_time >= 0.1:  # 適用時間を0.1秒に増やす
+        if current_time - last_activity_time >= 0.1:  # 0.1秒ごとにログを追加
             log_entry = {'time': current_time, 'action': 'no_activity'}
             mouse_logs.append(log_entry)
             print(log_entry)
             last_activity_time = current_time
-        time.sleep(0.1)  # スリープ時間を0.1秒に増やす
+        time.sleep(0.1)
 
 # スレッドの作成
 screen_thread = Thread(target=capture_screen)
 screen_thread.daemon = True
 screen_thread.start()
+
+save_thread = Thread(target=save_images)
+save_thread.daemon = True
+save_thread.start()
 
 no_activity_thread = Thread(target=log_no_activity)
 no_activity_thread.daemon = True
@@ -164,6 +177,9 @@ except KeyboardInterrupt:
 finally:
     mouse_listener.stop()
     keyboard_listener.stop()
+    # スレッドの終了を待つ
+    screen_thread.join()
+    save_thread.join()
 
 # CSVファイルにキー入力とマウス操作のログを書き込む
 import csv
@@ -179,3 +195,5 @@ with open(input_csv, 'w', newline='') as csvfile:
 # JSONファイルに記録した時間を書き込む
 with open(time_json, 'w') as jsonfile:
     json.dump({'start_time': last_time, 'end_time': time.time()}, jsonfile)
+
+cursor_img = cursor_img.resize((30//8, 40//8), Resampling.LANCZOS)
