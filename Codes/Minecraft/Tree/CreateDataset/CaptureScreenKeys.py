@@ -12,6 +12,9 @@ input_csv = './Codes/Minecraft/Tree/Datas/Input/input_log.csv'
 cursor_img_path = './Codes/Minecraft/Tree/CreateDataset/clipart.png'
 time_json = './Codes/Minecraft/Tree/Datas/Input/capture_time.json'
 
+# フレーム保存ディレクトリが存在しない場合は作成
+os.makedirs(frame_dir, exist_ok=True)
+
 # マウスカーソル画像の読み込みとサイズ変更
 cursor_img = Image.open(cursor_img_path)
 cursor_img = cursor_img.resize((16, 16), Image.ANTIALIAS)  # 16x16にリサイズ
@@ -37,14 +40,17 @@ def capture_screen():
         current_time = time.time()
         if current_time - last_time >= 0.1:  # キャプチャの間隔を0.1秒に設定
             last_time = current_time
-            # スクリーンキャプチャ
-            img = ImageGrab.grab()
-            # 画像の解像度を1/4に下げる
-            img = img.resize((img.width // 4, img.height // 4), Image.ANTIALIAS)
-            # マウスカーソルの合成
-            img.paste(cursor_img, (last_mouse_position[0] // 4, last_mouse_position[1] // 4), cursor_img)
-            # 保存
-            img.save(os.path.join(frame_dir, f'screenshot_{int(current_time * 1000)}.png'))
+            try:
+                # スクリーンキャプチャ
+                img = ImageGrab.grab()
+                # 画像の解像度を1/4に下げる
+                img = img.resize((img.width // 4, img.height // 4), Image.ANTIALIAS)
+                # マウスカーソルの合成
+                img.paste(cursor_img, (last_mouse_position[0] // 4, last_mouse_position[1] // 4), cursor_img)
+                # 保存
+                img.save(os.path.join(frame_dir, f'screenshot_{int(current_time * 1000)}.png'))
+            except Exception as e:
+                print(f"Error saving screenshot: {e}")
         time.sleep(0.01)
 
 # キー入力の記録
