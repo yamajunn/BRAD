@@ -9,7 +9,7 @@ import pyautogui
 import os
 import json
 
-cursor_image_path = './Codes/Minecraft/Tree/clipart.png'
+cursor_image_path = './Codes/Minecraft/Tree/CreateDataset/clipart.png'
 cursor_img = Image.open(cursor_image_path).convert("RGBA")
 
 csv_file = open('./Codes/Minecraft/Tree/Datas/Input/input_log.csv', mode='w', newline='')
