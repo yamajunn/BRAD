@@ -6,8 +6,6 @@ from PIL import Image, ImageGrab
 from PIL.Image import Resampling
 from pynput import mouse, keyboard
 from threading import Thread
-from concurrent.futures import ThreadPoolExecutor
-from datetime import datetime
 
 # パスの設定
 frame_dir = './Codes/Minecraft/Tree/Datas/Frames/'
@@ -76,7 +74,7 @@ def capture_screen():
             print(f"Error saving screenshot: {e}")
 
         # キャプチャの間隔を短縮
-        # time.sleep(0.01)
+        time.sleep(0.01)
 
 
 # キー入力の記録
@@ -135,12 +133,12 @@ def log_no_activity():
     global last_activity_time
     while not stop_program:
         current_time = time.time()
-        if current_time - last_activity_time >= 0.01:
+        if current_time - last_activity_time >= 0.1:  # 適用時間を0.1秒に増やす
             log_entry = {'time': current_time, 'action': 'no_activity'}
             mouse_logs.append(log_entry)
             print(log_entry)
             last_activity_time = current_time
-        time.sleep(0.01)
+        time.sleep(0.1)  # スリープ時間を0.1秒に増やす
 
 # スレッドの作成
 screen_thread = Thread(target=capture_screen)
