@@ -76,6 +76,12 @@ def on_move(x, y):
         print(log_entry)
         last_mouse_position = (x, y)
 
+def on_click(x, y, button, pressed):
+    action = 'click_press' if pressed else 'click_release'
+    log_entry = {'time': time.time(), 'x': x, 'y': y, 'button': str(button), 'action': action}
+    mouse_logs.append(log_entry)
+    print(log_entry)
+
 def on_scroll(x, y, dx, dy):
     log_entry = {'time': time.time(), 'x': x, 'y': y, 'dx': dx, 'dy': dy, 'action': 'scroll'}
     mouse_logs.append(log_entry)
@@ -86,7 +92,7 @@ screen_thread = Thread(target=capture_screen)
 screen_thread.daemon = True
 screen_thread.start()
 
-mouse_listener = mouse.Listener(on_move=on_move, on_scroll=on_scroll)
+mouse_listener = mouse.Listener(on_move=on_move, on_click=on_click, on_scroll=on_scroll)
 keyboard_listener = keyboard.Listener(on_press=on_press, on_release=on_release)
 
 mouse_listener.start()
@@ -105,13 +111,13 @@ finally:
 # CSVファイルにキー入力とマウス操作のログを書き込む
 import csv
 with open(input_csv, 'w', newline='') as csvfile:
-    fieldnames = ['time', 'key', 'action', 'x', 'y', 'angle', 'dx', 'dy']
+    fieldnames = ['time', 'key', 'action', 'x', 'y', 'angle', 'dx', 'dy', 'button']
     writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
     writer.writeheader()
     for log in key_logs:
-        writer.writerow({'time': log['time'], 'key': log['key'], 'action': log['action'], 'x': '', 'y': '', 'angle': '', 'dx': '', 'dy': ''})
+        writer.writerow({'time': log['time'], 'key': log['key'], 'action': log['action'], 'x': '', 'y': '', 'angle': '', 'dx': '', 'dy': '', 'button': ''})
     for log in mouse_logs:
-        writer.writerow({'time': log['time'], 'key': '', 'action': log['action'], 'x': log['x'], 'y': log['y'], 'angle': log.get('angle', ''), 'dx': log.get('dx', ''), 'dy': log.get('dy', '')})
+        writer.writerow({'time': log['time'], 'key': '', 'action': log['action'], 'x': log['x'], 'y': log['y'], 'angle': log.get('angle', ''), 'dx': log.get('dx', ''), 'dy': log.get('dy', ''), 'button': log.get('button', '')})
 
 # JSONファイルに記録した時間を書き込む
 with open(time_json, 'w') as jsonfile:
