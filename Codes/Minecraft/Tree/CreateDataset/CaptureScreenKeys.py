@@ -48,7 +48,8 @@ def capture_screen():
                 new_size = (int(img.width // 4), int(img.height // 4))
                 img = img.resize(new_size, Resampling.LANCZOS)
                 # マウスカーソルの合成
-                cursor_position = (int(last_mouse_position[0] // 4) - 8, int(last_mouse_position[1] // 4) - 8)  # 中央に配置するためにカーソル画像の半分のサイズを引く
+                cursor_position = (int(last_mouse_position[0] // 4) - cursor_img.width // 2, 
+                                int(last_mouse_position[1] // 4) - cursor_img.height // 2)  # 中央に配置するためにカーソル画像の半分のサイズを引く
                 img.paste(cursor_img, cursor_position, cursor_img)
                 # 保存
                 img.save(os.path.join(frame_dir, f'screenshot_{int(current_time * 1000)}.png'))
