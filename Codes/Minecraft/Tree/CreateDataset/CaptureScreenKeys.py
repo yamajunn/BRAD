@@ -41,7 +41,7 @@ def get_nearest_angle(dx, dy):
 def get_scaled_cursor_position(cursor_pos, orig_size, new_size):
     scale_x = new_size[0] / orig_size[0]
     scale_y = new_size[1] / orig_size[1]
-    return (int(cursor_pos[0] * scale_x), int(cursor_pos[1] * scale_y))
+    return (int(cursor_pos[0] * scale_x*2), int(cursor_pos[1] * scale_y*2))
 
 # スクリーンキャプチャと画像の保存
 def capture_screen():
