@@ -22,6 +22,7 @@ mouse_logs = []
 last_mouse_position = (0, 0)
 last_time = time.time()
 stop_program = False
+key_states = {}
 
 # 角度を10度刻みで記録するための関数
 def get_nearest_angle(x, y):
@@ -46,13 +47,21 @@ def capture_screen():
 # キー入力の記録
 def on_press(key):
     global stop_program
+    key_str = str(key)
     if key == keyboard.KeyCode.from_char('q'):
         stop_program = True
         return False  # リスナーを停止する
-    key_logs.append({'time': time.time(), 'key': str(key), 'action': 'press'})
+    if key_str not in key_states:
+        key_states[key_str] = 'press'
+        key_logs.append({'time': time.time(), 'key': key_str, 'action': 'press'})
+        print(f"press: {key_str}")
 
 def on_release(key):
-    key_logs.append({'time': time.time(), 'key': str(key), 'action': 'release'})
+    key_str = str(key)
+    if key_str in key_states:
+        key_logs.append({'time': time.time(), 'key': key_str, 'action': 'release'})
+        print(f"release: {key_str}")
+        del key_states[key_str]
 
 # マウス操作の記録
 def on_move(x, y):
@@ -61,11 +70,15 @@ def on_move(x, y):
     dy = y - last_mouse_position[1]
     if abs(dx) > 1 or abs(dy) > 1:
         angle = get_nearest_angle(dx, dy)
-        mouse_logs.append({'time': time.time(), 'x': x, 'y': y, 'angle': angle, 'action': 'move'})
+        log_entry = {'time': time.time(), 'x': x, 'y': y, 'angle': angle, 'action': 'move'}
+        mouse_logs.append(log_entry)
+        print(log_entry)
         last_mouse_position = (x, y)
 
 def on_scroll(x, y, dx, dy):
-    mouse_logs.append({'time': time.time(), 'x': x, 'y': y, 'dx': dx, 'dy': dy, 'action': 'scroll'})
+    log_entry = {'time': time.time(), 'x': x, 'y': y, 'dx': dx, 'dy': dy, 'action': 'scroll'}
+    mouse_logs.append(log_entry)
+    print(log_entry)
 
 # スレッドの作成
 screen_thread = Thread(target=capture_screen)
@@ -88,14 +101,16 @@ finally:
     mouse_listener.stop()
     keyboard_listener.stop()
 
-# CSVファイルにキー入力のログを書き込む
+# CSVファイルにキー入力とマウス操作のログを書き込む
 import csv
 with open(input_csv, 'w', newline='') as csvfile:
-    fieldnames = ['time', 'key', 'action']
+    fieldnames = ['time', 'key', 'action', 'x', 'y', 'angle', 'dx', 'dy']
     writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
     writer.writeheader()
     for log in key_logs:
-        writer.writerow(log)
+        writer.writerow({'time': log['time'], 'key': log['key'], 'action': log['action'], 'x': '', 'y': '', 'angle': '', 'dx': '', 'dy': ''})
+    for log in mouse_logs:
+        writer.writerow({'time': log['time'], 'key': '', 'action': log['action'], 'x': log['x'], 'y': log['y'], 'angle': log.get('angle', ''), 'dx': log.get('dx', ''), 'dy': log.get('dy', '')})
 
 # JSONファイルに記録した時間を書き込む
 with open(time_json, 'w') as jsonfile:
