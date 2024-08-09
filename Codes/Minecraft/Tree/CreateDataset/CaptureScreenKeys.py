@@ -2,7 +2,7 @@ import time
 import json
 import math
 import os
-from PIL import Image, ImageGrab
+from PIL import Image, ImageGrab, ImageResampling
 from pynput import mouse, keyboard
 from threading import Thread
 
@@ -17,7 +17,7 @@ os.makedirs(frame_dir, exist_ok=True)
 
 # マウスカーソル画像の読み込みとサイズ変更
 cursor_img = Image.open(cursor_img_path)
-cursor_img = cursor_img.resize((16, 16), Image.ANTIALIAS)  # 16x16にリサイズ
+cursor_img = cursor_img.resize((16, 16), Image.Resampling.LANCZOS)  # 16x16にリサイズ
 
 # グローバル変数の設定
 key_logs = []
@@ -44,9 +44,11 @@ def capture_screen():
                 # スクリーンキャプチャ
                 img = ImageGrab.grab()
                 # 画像の解像度を1/4に下げる
-                img = img.resize((img.width // 4, img.height // 4), Image.ANTIALIAS)
+                new_size = (img.width // 4, img.height // 4)
+                img = img.resize(new_size, Image.Resampling.LANCZOS)
                 # マウスカーソルの合成
-                img.paste(cursor_img, (last_mouse_position[0] // 4, last_mouse_position[1] // 4), cursor_img)
+                cursor_position = (last_mouse_position[0] // 4, last_mouse_position[1] // 4)
+                img.paste(cursor_img, cursor_position, cursor_img)
                 # 保存
                 img.save(os.path.join(frame_dir, f'screenshot_{int(current_time * 1000)}.png'))
             except Exception as e:
