@@ -2,10 +2,11 @@ import time
 import json
 import math
 import os
+import csv
 from PIL import Image, ImageGrab
 from PIL.Image import Resampling
 from pynput import mouse, keyboard
-from threading import Thread
+from threading import Thread, Lock
 
 # パスの設定
 frame_dir = './Codes/Minecraft/Tree/Datas/Frames/'
@@ -18,16 +19,18 @@ os.makedirs(frame_dir, exist_ok=True)
 
 # マウスカーソル画像の読み込みとサイズ変更
 cursor_img = Image.open(cursor_img_path)
-cursor_img = cursor_img.resize((30//8, 40//8), Resampling.LANCZOS)
+cursor_img = cursor_img.resize((30 // 8, 40 // 8), Resampling.LANCZOS)
 
 # グローバル変数の設定
 key_logs = []
 mouse_logs = []
+image_list = []
 last_mouse_position = (0, 0)
 last_time = time.time()
 stop_program = False
 key_states = {}
 last_activity_time = time.time()
+image_lock = Lock()
 
 # 角度を10度刻みで記録するための関数
 def get_nearest_angle(dx, dy):
@@ -38,11 +41,7 @@ def get_nearest_angle(dx, dy):
 def get_scaled_cursor_position(cursor_pos, orig_size, new_size):
     scale_x = new_size[0] / orig_size[0]
     scale_y = new_size[1] / orig_size[1]
-    return (int(cursor_pos[0] * scale_x * 2), int(cursor_pos[1] * scale_y * 2))
-
-# スクリーンキャプチャと画像の保存
-def save_image(img, timestamp):
-    img.save(os.path.join(frame_dir, f'screenshot_{timestamp}.png'))
+    return (int(cursor_pos[0] * scale_x), int(cursor_pos[1] * scale_y))
 
 # スクリーンキャプチャと画像の保存
 def capture_screen():
@@ -65,14 +64,27 @@ def capture_screen():
             
             img.paste(cursor_img, cursor_position, cursor_img)
             
-            # 保存
-            img.save(os.path.join(frame_dir, f'screenshot_{int(current_time * 1000)}.png'))
+            # 画像をリストに追加
+            timestamp = int(current_time * 1000)
+            with image_lock:
+                image_list.append((img, timestamp))
+                
+            # バッチ保存処理
+            if len(image_list) >= 10:  # 10枚キャプチャごとに保存
+                with image_lock:
+                    for image, ts in image_list:
+                        save_image(image, ts)
+                    image_list.clear()
+
         except Exception as e:
             print(f"Error saving screenshot: {e}")
 
         # キャプチャの間隔を短縮
         time.sleep(0.01)
 
+# スクリーン画像の保存
+def save_image(img, timestamp):
+    img.save(os.path.join(frame_dir, f'screenshot_{timestamp}.png'))
 
 # キー入力の記録
 def on_press(key):
@@ -157,7 +169,6 @@ finally:
     keyboard_listener.stop()
 
 # CSVファイルにキー入力とマウス操作のログを書き込む
-import csv
 with open(input_csv, 'w', newline='') as csvfile:
     fieldnames = ['time', 'key', 'action', 'x', 'y', 'angle', 'dx', 'dy', 'button']
     writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
