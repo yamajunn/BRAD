@@ -12,14 +12,16 @@ input_csv = './Codes/Minecraft/Tree/Datas/Input/input_log.csv'
 cursor_img_path = './Codes/Minecraft/Tree/CreateDataset/clipart.png'
 time_json = './Codes/Minecraft/Tree/Datas/Input/capture_time.json'
 
-# マウスカーソル画像の読み込み
+# マウスカーソル画像の読み込みとサイズ変更
 cursor_img = Image.open(cursor_img_path)
+cursor_img = cursor_img.resize((32, 32), Image.ANTIALIAS)  # 32x32にリサイズ
 
 # グローバル変数の設定
 key_logs = []
 mouse_logs = []
 last_mouse_position = (0, 0)
 last_time = time.time()
+stop_program = False
 
 # 角度を10度刻みで記録するための関数
 def get_nearest_angle(x, y):
@@ -29,7 +31,7 @@ def get_nearest_angle(x, y):
 # スクリーンキャプチャと画像の保存
 def capture_screen():
     global last_time
-    while True:
+    while not stop_program:
         current_time = time.time()
         if current_time - last_time >= 0.05:
             last_time = current_time
@@ -43,6 +45,10 @@ def capture_screen():
 
 # キー入力の記録
 def on_press(key):
+    global stop_program
+    if key == keyboard.KeyCode.from_char('q'):
+        stop_program = True
+        return False  # リスナーを停止する
     key_logs.append({'time': time.time(), 'key': str(key), 'action': 'press'})
 
 def on_release(key):
@@ -55,11 +61,11 @@ def on_move(x, y):
     dy = y - last_mouse_position[1]
     if abs(dx) > 1 or abs(dy) > 1:
         angle = get_nearest_angle(dx, dy)
-        mouse_logs.append({'time': time.time(), 'x': x, 'y': y, 'angle': angle})
+        mouse_logs.append({'time': time.time(), 'x': x, 'y': y, 'angle': angle, 'action': 'move'})
         last_mouse_position = (x, y)
 
 def on_scroll(x, y, dx, dy):
-    pass  # スクロールイベントは無視
+    mouse_logs.append({'time': time.time(), 'x': x, 'y': y, 'dx': dx, 'dy': dy, 'action': 'scroll'})
 
 # スレッドの作成
 screen_thread = Thread(target=capture_screen)
@@ -74,7 +80,7 @@ keyboard_listener.start()
 
 # プログラムが終了するまで待機
 try:
-    while True:
+    while not stop_program:
         time.sleep(1)
 except KeyboardInterrupt:
     pass
