@@ -1,157 +1,96 @@
-import csv
 import time
-import threading
-import cv2
-import numpy as np
-from pynput import keyboard, mouse
-from PIL import Image, ImageGrab
-from PIL.Image import Resampling
-import pyautogui
-import os
 import json
+import math
+import os
+from PIL import Image, ImageGrab
+from pynput import mouse, keyboard
+from threading import Thread
 
-cursor_image_path = './Codes/Minecraft/Tree/CreateDataset/clipart.png'
-cursor_img = Image.open(cursor_image_path).convert("RGBA")
+# パスの設定
+frame_dir = './Codes/Minecraft/Tree/Datas/Frames/'
+input_csv = './Codes/Minecraft/Tree/Datas/Input/input_log.csv'
+cursor_img_path = './Codes/Minecraft/Tree/CreateDataset/clipart.png'
+time_json = './Codes/Minecraft/Tree/Datas/Input/capture_time.json'
 
-csv_file = open('./Codes/Minecraft/Tree/Datas/Input/input_log.csv', mode='w', newline='')
-csv_writer = csv.writer(csv_file)
-csv_writer.writerow(['timestamp', 'device', 'event', 'detail'])
-print("CSV file opened and header written")
+# マウスカーソル画像の読み込み
+cursor_img = Image.open(cursor_img_path)
 
-pressed_keys = set()
-pressed_buttons = set()
-running = threading.Event()
-running.set()  # スレッドの実行フラグを立てる
-frame_index = 0
+# グローバル変数の設定
+key_logs = []
+mouse_logs = []
+last_mouse_position = (0, 0)
+last_time = time.time()
 
-start_time = time.time()  # 開始時間の記録
+# 角度を10度刻みで記録するための関数
+def get_nearest_angle(x, y):
+    angle = math.degrees(math.atan2(y, x)) % 360
+    return round(angle / 10) * 10
 
-def on_key_press(key):
-    if key == keyboard.KeyCode.from_char('q'):
-        running.clear()  # スレッドの実行フラグを下げる
-        return False
-    if key not in pressed_keys:
-        pressed_keys.add(key)
-        timestamp = time.time()
-        try:
-            csv_writer.writerow([timestamp, 'keyboard', 'press', key.char])
-        except AttributeError:
-            csv_writer.writerow([timestamp, 'keyboard', 'press', str(key)])
-        csv_file.flush()
-        print(f"Key pressed: {key}")
+# スクリーンキャプチャと画像の保存
+def capture_screen():
+    global last_time
+    while True:
+        current_time = time.time()
+        if current_time - last_time >= 0.05:
+            last_time = current_time
+            # スクリーンキャプチャ
+            img = ImageGrab.grab()
+            # マウスカーソルの合成
+            img.paste(cursor_img, (int(last_mouse_position[0]), int(last_mouse_position[1])), cursor_img)
+            # 保存
+            img.save(os.path.join(frame_dir, f'screenshot_{int(current_time)}.png'))
+        time.sleep(0.01)
 
-def on_key_release(key):
-    if key in pressed_keys:
-        pressed_keys.remove(key)
-        timestamp = time.time()
-        try:
-            csv_writer.writerow([timestamp, 'keyboard', 'release', key.char])
-        except AttributeError:
-            csv_writer.writerow([timestamp, 'keyboard', 'release', str(key)])
-        csv_file.flush()
-        print(f"Key released: {key}")
+# キー入力の記録
+def on_press(key):
+    key_logs.append({'time': time.time(), 'key': str(key), 'action': 'press'})
 
-def on_click(x, y, button, pressed):
-    if not running.is_set():
-        return
-    timestamp = time.time()
-    if pressed:
-        pressed_buttons.add(button)
-        csv_writer.writerow([timestamp, 'mouse', 'press', f'{button} at ({x}, {y})'])
-        print(f"Mouse button pressed: {button} at ({x}, {y})")
-    else:
-        if button in pressed_buttons:
-            pressed_buttons.remove(button)
-        csv_writer.writerow([timestamp, 'mouse', 'release', f'{button} at ({x}, {y})'])
-        print(f"Mouse button released: {button} at ({x}, {y})")
-    csv_file.flush()
+def on_release(key):
+    key_logs.append({'time': time.time(), 'key': str(key), 'action': 'release'})
 
+# マウス操作の記録
 def on_move(x, y):
-    if not running.is_set():
-        return
-    timestamp = time.time()
-    csv_writer.writerow([timestamp, 'mouse', 'move', f'({x}, {y})'])
-    csv_file.flush()
-    print(f"Mouse moved to ({x}, {y})")
+    global last_mouse_position
+    dx = x - last_mouse_position[0]
+    dy = y - last_mouse_position[1]
+    if abs(dx) > 1 or abs(dy) > 1:
+        angle = get_nearest_angle(dx, dy)
+        mouse_logs.append({'time': time.time(), 'x': x, 'y': y, 'angle': angle})
+        last_mouse_position = (x, y)
 
 def on_scroll(x, y, dx, dy):
-    if not running.is_set():
-        return
-    timestamp = time.time()
-    csv_writer.writerow([timestamp, 'mouse', 'scroll', f'({x}, {y}) {dx} {dy}'])
-    csv_file.flush()
-    print(f"Mouse scrolled at ({x}, {y}) with delta ({dx}, {dy})")
+    pass  # スクロールイベントは無視
 
-def capture_frame(queue):
-    global frame_index
-    while running.is_set():
-        start_time = time.time()
-        img = ImageGrab.grab()
-        img_np = np.array(img)
-        img_bgr = cv2.cvtColor(img_np, cv2.COLOR_RGB2BGR)
-        queue.append((time.time(), img_bgr, frame_index))
-        frame_index += 1
-        elapsed_time = time.time() - start_time
-        time.sleep(max(1/60 - elapsed_time, 0))
+# スレッドの作成
+screen_thread = Thread(target=capture_screen)
+screen_thread.daemon = True
+screen_thread.start()
 
-def process_frame(queue):
-    while running.is_set() or queue:
-        if queue:
-            timestamp, img_bgr, index = queue.pop(0)
+mouse_listener = mouse.Listener(on_move=on_move, on_scroll=on_scroll)
+keyboard_listener = keyboard.Listener(on_press=on_press, on_release=on_release)
 
-            screen_width, screen_height = pyautogui.size()
-            cursor_x, cursor_y = pyautogui.position()
+mouse_listener.start()
+keyboard_listener.start()
 
-            cursor_x = int(cursor_x * img_bgr.shape[1] / screen_width)
-            cursor_y = int(cursor_y * img_bgr.shape[0] / screen_height)
+# プログラムが終了するまで待機
+try:
+    while True:
+        time.sleep(1)
+except KeyboardInterrupt:
+    pass
+finally:
+    mouse_listener.stop()
+    keyboard_listener.stop()
 
-            cursor_resized = cursor_img.resize((10, 17), Resampling.LANCZOS)
-            cursor_img_np = np.array(cursor_resized)
+# CSVファイルにキー入力のログを書き込む
+import csv
+with open(input_csv, 'w', newline='') as csvfile:
+    fieldnames = ['time', 'key', 'action']
+    writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
+    writer.writeheader()
+    for log in key_logs:
+        writer.writerow(log)
 
-            cursor_x = min(cursor_x, img_bgr.shape[1] - cursor_img_np.shape[1])
-            cursor_y = min(cursor_y, img_bgr.shape[0] - cursor_img_np.shape[0])
-
-            for c in range(3):
-                img_bgr[cursor_y:cursor_y + cursor_img_np.shape[0], cursor_x:cursor_x + cursor_img_np.shape[1], c] = \
-                    cursor_img_np[:, :, c] * (cursor_img_np[:, :, 3] / 255.0) + \
-                    img_bgr[cursor_y:cursor_y + cursor_img_np.shape[0], cursor_x:cursor_x + cursor_img_np.shape[1], c] * (1 - cursor_img_np[:, :, 3] / 255.0)
-
-            frame_path = f'./Codes/Minecraft/Tree/Datas/Frames/frame_{index:05d}.png'
-            cv2.imwrite(frame_path, img_bgr)
-            # print(f"Frame {index} saved as {frame_path}")
-
-def save_total_capture_time(start, end):
-    total_time = end - start
-    time_data = {"total_capture_time": total_time}
-    with open('./Codes/Minecraft/Tree/Datas/Input/capture_time.json', 'w') as f:
-        json.dump(time_data, f, indent=4)
-    print("Total capture time saved to capture_time.json")
-
-def main():
-    frame_queue = []
-    capture_thread = threading.Thread(target=capture_frame, args=(frame_queue,))
-    process_thread = threading.Thread(target=process_frame, args=(frame_queue,))
-    capture_thread.start()
-    process_thread.start()
-
-    keyboard_listener = keyboard.Listener(on_press=on_key_press, on_release=on_key_release)
-    mouse_listener = mouse.Listener(on_click=on_click, on_move=on_move, on_scroll=on_scroll)
-
-    keyboard_listener.start()
-    mouse_listener.start()
-
-    try:
-        keyboard_listener.join()
-    except KeyboardInterrupt:
-        running.clear()
-
-    capture_thread.join()
-    process_thread.join()
-    csv_file.close()
-    print("Listeners stopped and CSV file closed")
-
-    end_time = time.time()  # 終了時間の記録
-    save_total_capture_time(start_time, end_time)
-
-if __name__ == "__main__":
-    main()
+# JSONファイルに記録した時間を書き込む
+with open(time_json, 'w') as jsonfile:
+    json.dump({'start_time': last_time, 'end_time': time.time()}, jsonfile)
