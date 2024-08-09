@@ -136,7 +136,6 @@ def log_no_activity():
         if current_time - last_activity_time >= 0.1:  # 適用時間を0.1秒に増やす
             log_entry = {'time': current_time, 'action': 'no_activity'}
             mouse_logs.append(log_entry)
-            print(log_entry)
             last_activity_time = current_time
         time.sleep(0.1)  # スリープ時間を0.1秒に増やす
 
