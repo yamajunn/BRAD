@@ -18,7 +18,7 @@ os.makedirs(frame_dir, exist_ok=True)
 
 # マウスカーソル画像の読み込みとサイズ変更
 cursor_img = Image.open(cursor_img_path)
-cursor_img = cursor_img.resize((6, 12), Resampling.LANCZOS)  # 16x16にリサイズ
+cursor_img = cursor_img.resize((30//8, 40//8), Resampling.LANCZOS)  # 16x16にリサイズ
 
 # グローバル変数の設定
 key_logs = []
@@ -52,7 +52,7 @@ def capture_screen():
                 img = ImageGrab.grab()
                 orig_size = img.size
                 # 画像の解像度を1/4に下げる
-                new_size = (int(orig_size[0] // 4), int(orig_size[1] // 4))
+                new_size = (int(orig_size[0] // 8), int(orig_size[1] // 8))
                 img = img.resize(new_size, Resampling.LANCZOS)
                 
                 # マウスカーソルの合成位置をスケーリング
@@ -67,7 +67,6 @@ def capture_screen():
                 img.save(os.path.join(frame_dir, f'screenshot_{int(current_time * 1000)}.png'))
             except Exception as e:
                 print(f"Error saving screenshot: {e}")
-        time.sleep(0.01)
 
 
 
