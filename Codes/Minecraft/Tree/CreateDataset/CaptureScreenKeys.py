@@ -34,6 +34,9 @@ def get_nearest_angle(dx, dy):
     angle = math.degrees(math.atan2(dy, dx)) % 360
     return round(angle / 10) * 10
 
+# スクリーンサイズを取得
+screen_size = ImageGrab.grab().size
+
 # スクリーンキャプチャと画像の保存
 def capture_screen():
     global last_time
@@ -48,13 +51,14 @@ def capture_screen():
                 new_size = (int(img.width // 4), int(img.height // 4))
                 img = img.resize(new_size, Resampling.LANCZOS)
                 # マウスカーソルの合成
-                cursor_position = (int(last_mouse_position[0] // 4) - cursor_img.width // 2, int(last_mouse_position[1] // 4) - cursor_img.height // 2)
+                cursor_position = (int(last_mouse_position[0] * new_size[0] / screen_size[0]), int(last_mouse_position[1] * new_size[1] / screen_size[1]))
                 img.paste(cursor_img, cursor_position, cursor_img)
                 # 保存
                 img.save(os.path.join(frame_dir, f'screenshot_{int(current_time * 1000)}.png'))
             except Exception as e:
                 print(f"Error saving screenshot: {e}")
         time.sleep(0.01)
+
 
 # キー入力の記録
 def on_press(key):
