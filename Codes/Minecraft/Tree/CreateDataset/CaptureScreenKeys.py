@@ -23,10 +23,11 @@ last_mouse_position = (0, 0)
 last_time = time.time()
 stop_program = False
 key_states = {}
+last_activity_time = time.time()
 
 # 角度を10度刻みで記録するための関数
-def get_nearest_angle(x, y):
-    angle = math.degrees(math.atan2(y, x)) % 360
+def get_nearest_angle(dx, dy):
+    angle = math.degrees(math.atan2(dy, dx)) % 360
     return round(angle / 10) * 10
 
 # スクリーンキャプチャと画像の保存
@@ -46,8 +47,9 @@ def capture_screen():
 
 # キー入力の記録
 def on_press(key):
-    global stop_program
+    global stop_program, last_activity_time
     key_str = str(key)
+    last_activity_time = time.time()
     if key == keyboard.KeyCode.from_char('q'):
         stop_program = True
         return False  # リスナーを停止する
@@ -57,7 +59,9 @@ def on_press(key):
         print(f"press: {key_str}")
 
 def on_release(key):
+    global last_activity_time
     key_str = str(key)
+    last_activity_time = time.time()
     if key_str in key_states:
         key_logs.append({'time': time.time(), 'key': key_str, 'action': 'release'})
         print(f"release: {key_str}")
@@ -65,7 +69,7 @@ def on_release(key):
 
 # マウス操作の記録
 def on_move(x, y):
-    global last_mouse_position
+    global last_mouse_position, last_activity_time
     dx = x - last_mouse_position[0]
     dy = y - last_mouse_position[1]
     distance = math.sqrt(dx**2 + dy**2)
@@ -75,22 +79,43 @@ def on_move(x, y):
         mouse_logs.append(log_entry)
         print(log_entry)
         last_mouse_position = (x, y)
+        last_activity_time = time.time()
 
 def on_click(x, y, button, pressed):
+    global last_activity_time
     action = 'click_press' if pressed else 'click_release'
     log_entry = {'time': time.time(), 'x': x, 'y': y, 'button': str(button), 'action': action}
     mouse_logs.append(log_entry)
     print(log_entry)
+    last_activity_time = time.time()
 
 def on_scroll(x, y, dx, dy):
+    global last_activity_time
     log_entry = {'time': time.time(), 'x': x, 'y': y, 'dx': dx, 'dy': dy, 'action': 'scroll'}
     mouse_logs.append(log_entry)
     print(log_entry)
+    last_activity_time = time.time()
+
+# 「何もしていない」を記録する関数
+def log_no_activity():
+    global last_activity_time
+    while not stop_program:
+        current_time = time.time()
+        if current_time - last_activity_time >= 0.01:
+            log_entry = {'time': current_time, 'action': 'no_activity'}
+            mouse_logs.append(log_entry)
+            print(log_entry)
+            last_activity_time = current_time
+        time.sleep(0.01)
 
 # スレッドの作成
 screen_thread = Thread(target=capture_screen)
 screen_thread.daemon = True
 screen_thread.start()
+
+no_activity_thread = Thread(target=log_no_activity)
+no_activity_thread.daemon = True
+no_activity_thread.start()
 
 mouse_listener = mouse.Listener(on_move=on_move, on_click=on_click, on_scroll=on_scroll)
 keyboard_listener = keyboard.Listener(on_press=on_press, on_release=on_release)
@@ -117,7 +142,7 @@ with open(input_csv, 'w', newline='') as csvfile:
     for log in key_logs:
         writer.writerow({'time': log['time'], 'key': log['key'], 'action': log['action'], 'x': '', 'y': '', 'angle': '', 'dx': '', 'dy': '', 'button': ''})
     for log in mouse_logs:
-        writer.writerow({'time': log['time'], 'key': '', 'action': log['action'], 'x': log['x'], 'y': log['y'], 'angle': log.get('angle', ''), 'dx': log.get('dx', ''), 'dy': log.get('dy', ''), 'button': log.get('button', '')})
+        writer.writerow({'time': log['time'], 'key': '', 'action': log['action'], 'x': log.get('x', ''), 'y': log.get('y', ''), 'angle': log.get('angle', ''), 'dx': log.get('dx', ''), 'dy': log.get('dy', ''), 'button': log.get('button', '')})
 
 # JSONファイルに記録した時間を書き込む
 with open(time_json, 'w') as jsonfile:
