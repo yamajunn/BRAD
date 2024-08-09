@@ -18,7 +18,7 @@ os.makedirs(frame_dir, exist_ok=True)
 
 # マウスカーソル画像の読み込みとサイズ変更
 cursor_img = Image.open(cursor_img_path)
-cursor_img = cursor_img.resize((8, 14), Resampling.LANCZOS)  # 16x16にリサイズ
+cursor_img = cursor_img.resize((6, 12), Resampling.LANCZOS)  # 16x16にリサイズ
 
 # グローバル変数の設定
 key_logs = []
@@ -38,7 +38,7 @@ def get_nearest_angle(dx, dy):
 def get_scaled_cursor_position(cursor_pos, orig_size, new_size):
     scale_x = new_size[0] / orig_size[0]
     scale_y = new_size[1] / orig_size[1]
-    return (int(cursor_pos[0] * scale_x), int(cursor_pos[1] * scale_y))
+    return (int(cursor_pos[0] * scale_x*2), int(cursor_pos[1] * scale_y*2))
 
 # スクリーンキャプチャと画像の保存
 def capture_screen():
@@ -54,15 +54,21 @@ def capture_screen():
                 # 画像の解像度を1/4に下げる
                 new_size = (int(orig_size[0] // 4), int(orig_size[1] // 4))
                 img = img.resize(new_size, Resampling.LANCZOS)
-                # マウスカーソルの合成
-                cursor_position = get_scaled_cursor_position(last_mouse_position, orig_size, new_size)
-                cursor_position = (cursor_position[0] - cursor_img.width // 2, cursor_position[1] - cursor_img.height // 2)  # カーソル画像の中央に配置
+                
+                # マウスカーソルの合成位置をスケーリング
+                scaled_cursor_position = get_scaled_cursor_position(last_mouse_position, orig_size, new_size)
+                
+                # カーソル画像を中央に配置
+                cursor_position = (scaled_cursor_position[0] - cursor_img.width // 2, scaled_cursor_position[1] - cursor_img.height // 2)
+                
                 img.paste(cursor_img, cursor_position, cursor_img)
+                
                 # 保存
                 img.save(os.path.join(frame_dir, f'screenshot_{int(current_time * 1000)}.png'))
             except Exception as e:
                 print(f"Error saving screenshot: {e}")
         time.sleep(0.01)
+
 
 
 
