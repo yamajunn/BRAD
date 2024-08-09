@@ -42,10 +42,7 @@ def get_scaled_cursor_position(cursor_pos, orig_size, new_size):
 
 # スクリーンキャプチャと画像の保存
 def save_image(img, timestamp):
-    try:
-        img.save(os.path.join(frame_dir, f'screenshot_{timestamp}.png'))
-    except Exception as e:
-        print(f"Error saving screenshot: {e}")
+    img.save(os.path.join(frame_dir, f'screenshot_{timestamp}.png'))
 
 # スクリーンキャプチャと画像の保存
 def capture_screen():
@@ -88,7 +85,6 @@ def on_press(key):
     if key_str not in key_states:
         key_states[key_str] = 'press'
         key_logs.append({'time': time.time(), 'key': key_str, 'action': 'press'})
-        print(f"press: {key_str}")
 
 def on_release(key):
     global last_activity_time
@@ -96,7 +92,6 @@ def on_release(key):
     last_activity_time = time.time()
     if key_str in key_states:
         key_logs.append({'time': time.time(), 'key': key_str, 'action': 'release'})
-        print(f"release: {key_str}")
         del key_states[key_str]
 
 # マウス操作の記録
@@ -109,7 +104,6 @@ def on_move(x, y):
         angle = get_nearest_angle(dx, dy)
         log_entry = {'time': time.time(), 'x': x, 'y': y, 'angle': angle, 'action': 'move'}
         mouse_logs.append(log_entry)
-        print(log_entry)
         last_mouse_position = (x, y)
         last_activity_time = time.time()
 
@@ -118,14 +112,12 @@ def on_click(x, y, button, pressed):
     action = 'click_press' if pressed else 'click_release'
     log_entry = {'time': time.time(), 'x': x, 'y': y, 'button': str(button), 'action': action}
     mouse_logs.append(log_entry)
-    print(log_entry)
     last_activity_time = time.time()
 
 def on_scroll(x, y, dx, dy):
     global last_activity_time
     log_entry = {'time': time.time(), 'x': x, 'y': y, 'dx': dx, 'dy': dy, 'action': 'scroll'}
     mouse_logs.append(log_entry)
-    print(log_entry)
     last_activity_time = time.time()
 
 # 「何もしていない」を記録する関数
