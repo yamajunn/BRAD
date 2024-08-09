@@ -34,8 +34,11 @@ def get_nearest_angle(dx, dy):
     angle = math.degrees(math.atan2(dy, dx)) % 360
     return round(angle / 10) * 10
 
-# スクリーンサイズを取得
-screen_size = ImageGrab.grab().size
+# マウスカーソルの合成位置を調整する関数
+def get_scaled_cursor_position(cursor_pos, orig_size, new_size):
+    scale_x = new_size[0] / orig_size[0]
+    scale_y = new_size[1] / orig_size[1]
+    return (int(cursor_pos[0] * scale_x), int(cursor_pos[1] * scale_y))
 
 # スクリーンキャプチャと画像の保存
 def capture_screen():
@@ -47,11 +50,13 @@ def capture_screen():
             try:
                 # スクリーンキャプチャ
                 img = ImageGrab.grab()
+                orig_size = img.size
                 # 画像の解像度を1/4に下げる
-                new_size = (int(img.width // 4), int(img.height // 4))
+                new_size = (int(orig_size[0] // 4), int(orig_size[1] // 4))
                 img = img.resize(new_size, Resampling.LANCZOS)
                 # マウスカーソルの合成
-                cursor_position = (int(last_mouse_position[0] * new_size[0] / screen_size[0]), int(last_mouse_position[1] * new_size[1] / screen_size[1]))
+                cursor_position = get_scaled_cursor_position(last_mouse_position, orig_size, new_size)
+                cursor_position = (cursor_position[0] - cursor_img.width // 2, cursor_position[1] - cursor_img.height // 2)  # カーソル画像の中央に配置
                 img.paste(cursor_img, cursor_position, cursor_img)
                 # 保存
                 img.save(os.path.join(frame_dir, f'screenshot_{int(current_time * 1000)}.png'))
