@@ -2,7 +2,8 @@ import time
 import json
 import math
 import os
-from PIL import Image, ImageGrab, ImageResampling
+from PIL import Image, ImageGrab
+from PIL.Image import Resampling
 from pynput import mouse, keyboard
 from threading import Thread
 
@@ -45,7 +46,7 @@ def capture_screen():
                 img = ImageGrab.grab()
                 # 画像の解像度を1/4に下げる
                 new_size = (img.width // 4, img.height // 4)
-                img = img.resize(new_size, Image.Resampling.LANCZOS)
+                img = img.resize(new_size, Resampling.LANCZOS)
                 # マウスカーソルの合成
                 cursor_position = (last_mouse_position[0] // 4, last_mouse_position[1] // 4)
                 img.paste(cursor_img, cursor_position, cursor_img)
