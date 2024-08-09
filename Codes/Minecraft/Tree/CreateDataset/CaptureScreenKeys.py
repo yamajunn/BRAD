@@ -4,7 +4,8 @@ import threading
 import cv2
 import numpy as np
 from pynput import keyboard, mouse
-from PIL import Image, ImageGrab, ImageResampling
+from PIL import Image, ImageGrab
+from PIL.Image import Resampling
 import pyautogui
 import os
 import json
@@ -104,7 +105,7 @@ def process_frame(queue):
             cursor_x = int(cursor_x * img_bgr.shape[1] / screen_width)
             cursor_y = int(cursor_y * img_bgr.shape[0] / screen_height)
 
-            cursor_resized = cursor_img.resize((10, 17), ImageResampling.LANCZOS)
+            cursor_resized = cursor_img.resize((10, 17), Resampling.LANCZOS)
             cursor_img_np = np.array(cursor_resized)
 
             cursor_x = min(cursor_x, img_bgr.shape[1] - cursor_img_np.shape[1])
