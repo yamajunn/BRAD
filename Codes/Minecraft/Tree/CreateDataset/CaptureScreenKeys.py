@@ -29,7 +29,7 @@ last_time = time.time()
 stop_program = False
 key_states = {}
 last_activity_time = time.time()
-image_queue = Queue()
+image_list = []  # 画像を保持するリスト
 image_lock = Lock()
 
 # 角度を10度刻みで記録するための関数
@@ -65,26 +65,26 @@ def capture_screen():
                 
                 img.paste(cursor_img, cursor_position, cursor_img)
                 
-                # 画像をキューに追加
+                # 画像をリストに追加
                 with image_lock:
-                    image_queue.put((img, int(current_time * 1000)))
+                    image_list.append((img, int(current_time * 1000)))
+                    if len(image_list) >= 10:
+                        save_images()
             except Exception as e:
                 print(f"Error capturing screenshot: {e}")
 
 def save_images():
-    while not stop_program or not image_queue.empty():
-        batch_size = 10
-        batch = []
-        with image_lock:
-            while not image_queue.empty() and len(batch) < batch_size:
-                batch.append(image_queue.get())
+    global image_list
+    with image_lock:
+        # 10枚の画像をまとめて保存
+        batch = image_list[:10]
+        image_list = image_list[10:]
         
-        if batch:
-            for img, timestamp in batch:
-                try:
-                    img.save(os.path.join(frame_dir, f'screenshot_{timestamp}.png'))
-                except Exception as e:
-                    print(f"Error saving screenshot: {e}")
+    for img, timestamp in batch:
+        try:
+            img.save(os.path.join(frame_dir, f'screenshot_{timestamp}.png'))
+        except Exception as e:
+            print(f"Error saving screenshot: {e}")
 
 # キー入力の記録
 def on_press(key):
@@ -154,10 +154,6 @@ screen_thread = Thread(target=capture_screen)
 screen_thread.daemon = True
 screen_thread.start()
 
-save_thread = Thread(target=save_images)
-save_thread.daemon = True
-save_thread.start()
-
 no_activity_thread = Thread(target=log_no_activity)
 no_activity_thread.daemon = True
 no_activity_thread.start()
@@ -179,7 +175,8 @@ finally:
     keyboard_listener.stop()
     # スレッドの終了を待つ
     screen_thread.join()
-    save_thread.join()
+    # 残りの画像を保存
+    save_images()
 
 # CSVファイルにキー入力とマウス操作のログを書き込む
 import csv
@@ -195,5 +192,3 @@ with open(input_csv, 'w', newline='') as csvfile:
 # JSONファイルに記録した時間を書き込む
 with open(time_json, 'w') as jsonfile:
     json.dump({'start_time': last_time, 'end_time': time.time()}, jsonfile)
-
-cursor_img = cursor_img.resize((30//8, 40//8), Resampling.LANCZOS)
