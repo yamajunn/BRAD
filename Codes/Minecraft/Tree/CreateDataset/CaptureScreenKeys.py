@@ -4,7 +4,7 @@ import threading
 import cv2
 import numpy as np
 from pynput import keyboard, mouse
-from PIL import Image, ImageGrab
+from PIL import Image, ImageResampling
 import pyautogui
 import os
 import json
