@@ -50,19 +50,16 @@ def capture_screen():
             try:
                 # スクリーンキャプチャ
                 img = ImageGrab.grab()
-                orig_size = img.size
-                # 画像の解像度を1/4に下げる
-                new_size = (int(orig_size[0] // 4), int(orig_size[1] // 4))
-                img = img.resize(new_size, Resampling.LANCZOS)
                 # マウスカーソルの合成
-                cursor_position = get_scaled_cursor_position(last_mouse_position, orig_size, new_size)
-                cursor_position = (cursor_position[0] - cursor_img.width // 2, cursor_position[1] - cursor_img.height // 2)  # カーソル画像の中央に配置
+                cursor_position = (last_mouse_position[0] - cursor_img.width // 2, last_mouse_position[1] - cursor_img.height // 2)  # カーソル画像の中央に配置
                 img.paste(cursor_img, cursor_position, cursor_img)
                 # 保存
                 img.save(os.path.join(frame_dir, f'screenshot_{int(current_time * 1000)}.png'))
             except Exception as e:
                 print(f"Error saving screenshot: {e}")
         time.sleep(0.01)
+
+
 
 
 # キー入力の記録
