@@ -19,7 +19,7 @@ os.makedirs(frame_dir, exist_ok=True)
 
 # マウスカーソル画像の読み込みとサイズ変更
 cursor_img = Image.open(cursor_img_path)
-cursor_img = cursor_img.resize((30 // 6, 40 // 6), Resampling.LANCZOS)
+cursor_img = cursor_img.resize((30 // 4, 40 // 4), Resampling.LANCZOS)
 
 # グローバル変数の設定
 key_logs = []
@@ -46,7 +46,7 @@ def get_scaled_cursor_position(cursor_pos, orig_size, new_size):
 img = ImageGrab.grab()
 orig_size = img.size
 # 画像の解像度を1/8に下げる
-new_size = (int(orig_size[0] // 6), int(orig_size[1] // 6))
+new_size = (int(orig_size[0] // 4), int(orig_size[1] // 4))
 
 # スクリーンキャプチャと画像の保存
 def capture_screen():
