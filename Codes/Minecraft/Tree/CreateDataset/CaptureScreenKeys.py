@@ -18,7 +18,7 @@ os.makedirs(frame_dir, exist_ok=True)
 
 # マウスカーソル画像の読み込みとサイズ変更
 cursor_img = Image.open(cursor_img_path)
-cursor_img = cursor_img.resize((30//8, 40//8), Resampling.LANCZOS)  # 16x16にリサイズ
+cursor_img = cursor_img.resize((30//8, 40//8), Resampling.LANCZOS)
 
 # グローバル変数の設定
 key_logs = []
@@ -41,32 +41,41 @@ def get_scaled_cursor_position(cursor_pos, orig_size, new_size):
     return (int(cursor_pos[0] * scale_x * 2), int(cursor_pos[1] * scale_y * 2))
 
 # スクリーンキャプチャと画像の保存
+def save_image(img, timestamp):
+    try:
+        img.save(os.path.join(frame_dir, f'screenshot_{timestamp}.png'))
+    except Exception as e:
+        print(f"Error saving screenshot: {e}")
+
+# スクリーンキャプチャと画像の保存
 def capture_screen():
     global last_time
     while not stop_program:
         current_time = time.time()
-        if current_time - last_time >= 0.0625:  # キャプチャの間隔を0.0625秒に設定
-            last_time = current_time
-            try:
-                # スクリーンキャプチャ
-                img = ImageGrab.grab()
-                orig_size = img.size
-                # 画像の解像度を1/8に下げる
-                new_size = (int(orig_size[0] // 8), int(orig_size[1] // 8))
-                img = img.resize(new_size, Resampling.LANCZOS)
-                
-                # マウスカーソルの合成位置をスケーリング
-                scaled_cursor_position = get_scaled_cursor_position(last_mouse_position, orig_size, new_size)
-                
-                # カーソル画像を中央に配置
-                cursor_position = (scaled_cursor_position[0] - cursor_img.width // 2, scaled_cursor_position[1] - cursor_img.height // 2)
-                
-                img.paste(cursor_img, cursor_position, cursor_img)
-                
-                # 保存
-                img.save(os.path.join(frame_dir, f'screenshot_{int(current_time * 1000)}.png'))
-            except Exception as e:
-                print(f"Error saving screenshot: {e}")
+        try:
+            # スクリーンキャプチャ
+            img = ImageGrab.grab()
+            orig_size = img.size
+            # 画像の解像度を1/8に下げる
+            new_size = (int(orig_size[0] // 8), int(orig_size[1] // 8))
+            img = img.resize(new_size, Resampling.LANCZOS)
+            
+            # マウスカーソルの合成位置をスケーリング
+            scaled_cursor_position = get_scaled_cursor_position(last_mouse_position, orig_size, new_size)
+            
+            # カーソル画像を中央に配置
+            cursor_position = (scaled_cursor_position[0] - cursor_img.width // 2, scaled_cursor_position[1] - cursor_img.height // 2)
+            
+            img.paste(cursor_img, cursor_position, cursor_img)
+            
+            # 保存
+            img.save(os.path.join(frame_dir, f'screenshot_{int(current_time * 1000)}.png'))
+        except Exception as e:
+            print(f"Error saving screenshot: {e}")
+
+        # キャプチャの間隔を短縮
+        time.sleep(0.01)
+
 
 # キー入力の記録
 def on_press(key):
@@ -124,12 +133,12 @@ def log_no_activity():
     global last_activity_time
     while not stop_program:
         current_time = time.time()
-        if current_time - last_activity_time >= 0.1:  # 0.1秒ごとにログを追加
+        if current_time - last_activity_time >= 0.1:  # 適用時間を0.1秒に増やす
             log_entry = {'time': current_time, 'action': 'no_activity'}
             mouse_logs.append(log_entry)
             print(log_entry)
             last_activity_time = current_time
-        time.sleep(0.1)
+        time.sleep(0.1)  # スリープ時間を0.1秒に増やす
 
 # スレッドの作成
 screen_thread = Thread(target=capture_screen)
