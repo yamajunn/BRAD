@@ -14,7 +14,7 @@ time_json = './Codes/Minecraft/Tree/Datas/Input/capture_time.json'
 
 # マウスカーソル画像の読み込みとサイズ変更
 cursor_img = Image.open(cursor_img_path)
-cursor_img = cursor_img.resize((12, 25), Image.ANTIALIAS)  # 32x32にリサイズ
+cursor_img = cursor_img.resize((16, 32), Image.ANTIALIAS)  # 32x32にリサイズ
 
 # グローバル変数の設定
 key_logs = []
