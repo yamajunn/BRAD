@@ -43,6 +43,11 @@ def get_scaled_cursor_position(cursor_pos, orig_size, new_size):
     scale_y = new_size[1] / orig_size[1]*2
     return (int(cursor_pos[0] * scale_x), int(cursor_pos[1] * scale_y))
 
+img = ImageGrab.grab()
+orig_size = img.size
+# 画像の解像度を1/8に下げる
+new_size = (int(orig_size[0] // 6), int(orig_size[1] // 6))
+
 # スクリーンキャプチャと画像の保存
 def capture_screen():
     global last_time
@@ -51,9 +56,6 @@ def capture_screen():
         try:
             # スクリーンキャプチャ
             img = ImageGrab.grab()
-            orig_size = img.size
-            # 画像の解像度を1/8に下げる
-            new_size = (int(orig_size[0] // 6), int(orig_size[1] // 6))
             img = img.resize(new_size, Resampling.LANCZOS)
             
             # マウスカーソルの合成位置をスケーリング
