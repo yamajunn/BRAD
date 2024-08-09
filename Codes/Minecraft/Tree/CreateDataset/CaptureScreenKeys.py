@@ -14,7 +14,7 @@ time_json = './Codes/Minecraft/Tree/Datas/Input/capture_time.json'
 
 # マウスカーソル画像の読み込みとサイズ変更
 cursor_img = Image.open(cursor_img_path)
-cursor_img = cursor_img.resize((20, 32), Image.ANTIALIAS)  # 32x32にリサイズ
+cursor_img = cursor_img.resize((32, 32), Image.ANTIALIAS)  # 32x32にリサイズ
 
 # グローバル変数の設定
 key_logs = []
@@ -39,8 +39,10 @@ def capture_screen():
             last_time = current_time
             # スクリーンキャプチャ
             img = ImageGrab.grab()
+            # 画像の解像度を下げる
+            img = img.resize((int(img.width * 0.5), int(img.height * 0.5)))
             # マウスカーソルの合成
-            img.paste(cursor_img, (int(last_mouse_position[0]), int(last_mouse_position[1])), cursor_img)
+            img.paste(cursor_img, (int(last_mouse_position[0] * 0.5), int(last_mouse_position[1] * 0.5)), cursor_img)
             # 保存
             img.save(os.path.join(frame_dir, f'screenshot_{int(current_time)}.png'))
         time.sleep(0.01)
