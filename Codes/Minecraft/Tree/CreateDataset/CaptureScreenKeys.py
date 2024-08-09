@@ -68,7 +68,8 @@ def on_move(x, y):
     global last_mouse_position
     dx = x - last_mouse_position[0]
     dy = y - last_mouse_position[1]
-    if abs(dx) > 1 or abs(dy) > 1:
+    distance = math.sqrt(dx**2 + dy**2)
+    if distance >= 1:
         angle = get_nearest_angle(dx, dy)
         log_entry = {'time': time.time(), 'x': x, 'y': y, 'angle': angle, 'action': 'move'}
         mouse_logs.append(log_entry)
