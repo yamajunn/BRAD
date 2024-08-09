@@ -18,7 +18,7 @@ os.makedirs(frame_dir, exist_ok=True)
 
 # マウスカーソル画像の読み込みとサイズ変更
 cursor_img = Image.open(cursor_img_path)
-cursor_img = cursor_img.resize((16, 16), Resampling.LANCZOS)  # 16x16にリサイズ
+cursor_img = cursor_img.resize((8, 14), Resampling.LANCZOS)  # 16x16にリサイズ
 
 # グローバル変数の設定
 key_logs = []
