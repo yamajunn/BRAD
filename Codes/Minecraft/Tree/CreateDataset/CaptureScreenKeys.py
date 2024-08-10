@@ -24,6 +24,7 @@ cursor_img = cursor_img.resize((30 // 4, 40 // 4), Resampling.LANCZOS)
 # グローバル変数の設定
 key_logs = []
 mouse_logs = []
+saved_images = []
 last_mouse_position = (0, 0)
 last_time = time.time()
 stop_program = False
@@ -77,7 +78,9 @@ def capture_screen():
 
 # スクリーン画像の保存
 def save_image(img, timestamp):
-    img.save(os.path.join(frame_dir, f'screenshot_{timestamp}.png'))
+    image_path = os.path.join(frame_dir, f'screenshot_{timestamp}.png')
+    img.save(image_path)
+    saved_images.append(image_path)
 
 # キー入力の記録
 def on_press(key):
@@ -186,6 +189,6 @@ finally:
 # 最後にログを保存
 save_logs()
 
-# JSONファイルに記録した時間を書き込む
+# JSONファイルに記録した時間と保存された画像の名前を書き込む
 with open(time_json, 'w') as jsonfile:
-    json.dump({'start_time': last_time, 'end_time': time.time()}, jsonfile)
+    json.dump({'start_time': last_time, 'end_time': time.time(), 'saved_images': saved_images}, jsonfile)
