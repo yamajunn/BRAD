@@ -1,31 +1,7 @@
-from PIL import ImageGrab, Image
+from PIL import ImageGrab
 import cv2
 import numpy as np
-import Quartz
 import time
-import io
-import ctypes
-
-# マウスカーソル画像を取得する関数
-def get_cursor_image():
-    # カーソルのサイズと形状は固定ではないため、適切なサイズを設定する
-    cursor_size = (32, 32)
-    display_id = Quartz.CGMainDisplayID()
-    
-    # スクリーン全体の画像を取得
-    screen_image = Quartz.CGDisplayCreateImageForRect(display_id, Quartz.CGRectMake(0, 0, cursor_size[0], cursor_size[1]))
-    
-    if screen_image is not None:
-        # 画像データをPillow形式に変換
-        image_data = Quartz.CGDataProviderCopyData(Quartz.CGImageGetDataProvider(screen_image))
-        cursor_pil_image = Image.open(io.BytesIO(image_data))
-        return cursor_pil_image
-    return None
-
-# マウスカーソルの位置を取得する関数
-def get_mouse_position():
-    mouse_location = Quartz.CGEventGetLocation(Quartz.CGEventCreate(None))
-    return int(mouse_location.x), int(mouse_location.y)
 
 # 画面キャプチャの設定
 fps = 15
@@ -39,9 +15,6 @@ width, height = screen_rect[2], screen_rect[3]
 fourcc = cv2.VideoWriter_fourcc(*'mp4v')
 video_writer = cv2.VideoWriter(output_file, fourcc, fps, (width, height))
 
-# カーソル画像を取得
-cursor_image = get_cursor_image()
-
 def capture_screen():
     while True:
         # 現在のスクリーンの画像を取得
@@ -53,27 +26,6 @@ def capture_screen():
         # Pillowの画像はRGB形式なので、OpenCVのBGR形式に変換
         img_bgr = cv2.cvtColor(img_np, cv2.COLOR_RGB2BGR)
 
-        # マウスカーソルの位置を取得
-        cursor_x, cursor_y = get_mouse_position()
-        
-        # カーソル画像が取得できている場合
-        if cursor_image:
-            # カーソル画像をnumpy配列に変換
-            cursor_np = np.array(cursor_image)
-            
-            # カーソルの位置とサイズを計算
-            cursor_width, cursor_height = cursor_image.size
-            
-            # カーソル画像をBGR形式に変換
-            cursor_bgr = cv2.cvtColor(cursor_np, cv2.COLOR_RGB2BGR)
-            
-            # キャプチャ画像にカーソル画像を重ね合わせる
-            x1, y1 = cursor_x, cursor_y
-            x2, y2 = x1 + cursor_width, y1 + cursor_height
-            
-            if x1 < width and y1 < height:
-                img_bgr[y1:y2, x1:x2] = cv2.addWeighted(img_bgr[y1:y2, x1:x2], 0.5, cursor_bgr, 0.5, 0)
-        
         # フレームを動画に書き込み
         video_writer.write(img_bgr)
 
