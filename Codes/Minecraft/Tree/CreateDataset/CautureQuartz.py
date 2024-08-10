@@ -32,6 +32,7 @@ def capture_screen():
     cursor_height, cursor_width = cursor_image_np.shape[:2]
     
     while True:
+        print("a")
         # 現在のスクリーンの画像を取得
         img = ImageGrab.grab(bbox=screen_rect)
         img_np = np.array(img)
