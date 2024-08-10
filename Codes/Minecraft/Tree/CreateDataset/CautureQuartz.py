@@ -1,7 +1,6 @@
-import mss
 import numpy as np
 import cv2
-from PIL import Image
+from PIL import Image, ImageGrab
 import time
 
 # マウスカーソル画像のパス
@@ -15,49 +14,45 @@ cursor_height, cursor_width = cursor_np.shape[:2]
 # 画面キャプチャの設定
 fps = 15
 output_file = 'output.mp4'
-screen_rect = {'top': 0, 'left': 0, 'width': 1440, 'height': 900}  # 画面のサイズに合わせて設定
+screen_rect = (0, 0, 1440, 900)  # 画面のサイズに合わせて設定
 
 # 動画のフォーマット、コーデック、フレームレート、サイズを設定
 fourcc = cv2.VideoWriter_fourcc(*'mp4v')
-video_writer = cv2.VideoWriter(output_file, fourcc, fps, (screen_rect['width'], screen_rect['height']))
+video_writer = cv2.VideoWriter(output_file, fourcc, fps, (screen_rect[2] - screen_rect[0], screen_rect[3] - screen_rect[1]))
 
 def get_mouse_position():
-    # マウスカーソルの位置を取得
     import Quartz
     mouse_location = Quartz.CGEventGetLocation(Quartz.CGEventCreate(None))
     return int(mouse_location.x), int(mouse_location.y)
 
 def capture_screen():
-    with mss.mss() as sct:
-        while True:
-            # 現在のスクリーンの画像を取得（RGBAでキャプチャ）
-            img = sct.grab(screen_rect)
-            img_np = np.array(img)
-            if img_np.shape[2] == 3:  # RGBの場合、アルファチャネルを追加
-                img_np = np.dstack([img_np, np.full((img_np.shape[0], img_np.shape[1]), 255)])
+    while True:
+        # 現在のスクリーンの画像を取得
+        img = ImageGrab.grab(bbox=screen_rect)
+        img_np = np.array(img)
+        if img_np.shape[2] == 3:  # RGBの場合、アルファチャネルを追加
+            img_np = np.dstack([img_np, np.full((img_np.shape[0], img_np.shape[1]), 255)])
 
-            # マウスカーソルの位置を取得
-            cursor_x, cursor_y = get_mouse_position()
+        # PillowのImageに変換
+        img_pil = Image.fromarray(img_np, 'RGBA')
 
-            # カーソルの位置とサイズを計算
-            x1, y1 = cursor_x - cursor_width // 2, cursor_y - cursor_height // 2
-            x2, y2 = x1 + cursor_width, y1 + cursor_height
-            
-            if x1 < screen_rect['width'] and y1 < screen_rect['height']:
-                # スクリーン画像にカーソル画像を重ね合わせる
-                for i in range(cursor_height):
-                    for j in range(cursor_width):
-                        if (0 <= x1 + j < screen_rect['width']) and (0 <= y1 + i < screen_rect['height']):
-                            # カーソルのピクセルをスクリーン画像に適用（透明度も考慮）
-                            cursor_pixel = cursor_np[i, j]
-                            if cursor_pixel[3] > 0:  # alpha value
-                                img_np[y1 + i, x1 + j] = cursor_pixel[:4]  # Ensure the pixel has 4 channels
+        # マウスカーソルの位置を取得
+        cursor_x, cursor_y = get_mouse_position()
 
-            # フレームを動画に書き込み
-            video_writer.write(img_np)
+        # カーソルの位置とサイズを計算
+        x1, y1 = cursor_x - cursor_width // 2, cursor_y - cursor_height // 2
+        x2, y2 = x1 + cursor_width, y1 + cursor_height
 
-            # 15 FPSでキャプチャ
-            time.sleep(1 / fps)
+        if x1 < screen_rect[2] and y1 < screen_rect[3]:
+            # カーソル画像をスクリーン画像に合成
+            cursor_pil = cursor_image
+            img_pil.paste(cursor_pil, (x1, y1), cursor_pil)  # 透明度を考慮して合成
+
+        # フレームを動画に書き込み
+        video_writer.write(np.array(img_pil))
+
+        # 15 FPSでキャプチャ
+        time.sleep(1 / fps)
 
 # キャプチャを開始
 try:
