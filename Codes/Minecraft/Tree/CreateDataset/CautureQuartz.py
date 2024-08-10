@@ -5,7 +5,7 @@ from PIL import Image
 import time
 
 # マウスカーソル画像のパス
-cursor_image_path = 'cursor.png'
+cursor_image_path = './Codes/Minecraft/Tree/CreateDataset/clipart.png'
 
 # カーソル画像を読み込む
 cursor_image = Image.open(cursor_image_path).convert('RGBA')
