@@ -1,26 +1,36 @@
-from PIL import ImageGrab, Image
-import cv2
 import numpy as np
+import cv2
 import time
 import Quartz
+import AppKit
 
 # 画面キャプチャの設定
 fps = 15
 output_file = 'output.mp4'
-cursor_image_path = './Codes/Minecraft/Tree/CreateDataset/clipart.png'  # カーソル画像のパス
 
 # 画面のサイズを取得
-screen_rect = (0, 0, *ImageGrab.grab().size)
-width, height = screen_rect[2], screen_rect[3]
+screen_width = Quartz.CGDisplayPixelsWide(Quartz.kCGDirectMainDisplay)
+screen_height = Quartz.CGDisplayPixelsHigh(Quartz.kCGDirectMainDisplay)
 
 # 動画のフォーマット、コーデック、フレームレート、サイズを設定
 fourcc = cv2.VideoWriter_fourcc(*'mp4v')
-video_writer = cv2.VideoWriter(output_file, fourcc, fps, (width, height))
+video_writer = cv2.VideoWriter(output_file, fourcc, fps, (screen_width, screen_height))
 
 def get_cursor_image():
     """カーソルの画像を取得する"""
-    cursor_image = Image.open(cursor_image_path).convert('RGBA')
-    return np.array(cursor_image)
+    cursor = AppKit.NSImage.imageNamed_("cursor.png")
+    cursor_size = cursor.size()
+    cursor_width = int(cursor_size.width)
+    cursor_height = int(cursor_size.height)
+    
+    cursor_rect = AppKit.NSMakeRect(0, 0, cursor_width, cursor_height)
+    cursor_bmp = AppKit.NSBitmapImageRep.alloc().initWithFocusedViewRect_(cursor_rect)
+    
+    cursor_data = cursor_bmp.representationUsingType_properties_(AppKit.NSBitmapImageFileTypePNG, None)
+    cursor_array = np.frombuffer(cursor_data.bytes(), dtype=np.uint8)
+    cursor_img = cv2.imdecode(cursor_array, cv2.IMREAD_UNCHANGED)
+    
+    return cursor_img
 
 def get_cursor_position():
     """カーソルの位置を取得する"""
@@ -32,13 +42,13 @@ def capture_screen():
     cursor_height, cursor_width = cursor_image_np.shape[:2]
     
     while True:
-        print("a")
         # 現在のスクリーンの画像を取得
-        img = ImageGrab.grab(bbox=screen_rect)
-        img_np = np.array(img)
+        screenshot = Quartz.CGWindowListCreateImage(Quartz.CGRectInfinite, Quartz.kCGWindowListOptionOnScreenOnly, Quartz.kCGNullWindowID, Quartz.kCGWindowImageDefault)
+        img_np = np.frombuffer(Quartz.CGDataProviderCopyData(Quartz.CGImageGetDataProvider(screenshot)), dtype=np.uint8)
+        img_np = img_np.reshape((screen_height, screen_width, 4))  # BGRA形式
         
-        # Pillowの画像はRGB形式なので、OpenCVのBGR形式に変換
-        img_bgr = cv2.cvtColor(img_np, cv2.COLOR_RGB2BGR)
+        # BGRAをBGRに変換
+        img_bgr = cv2.cvtColor(img_np, cv2.COLOR_BGRA2BGR)
 
         # マウスカーソルの位置を取得
         cursor_x, cursor_y = get_cursor_position()
@@ -48,16 +58,11 @@ def capture_screen():
         x2, y2 = x1 + cursor_width, y1 + cursor_height
 
         # スクリーン画像にカーソルを追加
-        if 0 <= x1 < width and 0 <= y1 < height:
-            # カーソル画像をBGR形式に変換
-            cursor_bgr = cv2.cvtColor(cursor_image_np, cv2.COLOR_RGBA2BGR)
+        if 0 <= x1 < screen_width and 0 <= y1 < screen_height:
             # カーソル画像をスクリーン画像に合成
-            cursor_x1, cursor_y1 = max(0, x1), max(0, y1)
-            cursor_x2, cursor_y2 = min(width, x2), min(height, y2)
-            img_bgr[cursor_y1:cursor_y2, cursor_x1:cursor_x2] = cursor_bgr[
-                0:(cursor_y2 - cursor_y1),
-                0:(cursor_x2 - cursor_x1)
-            ]
+            alpha_cursor = cursor_image_np[:, :, 3] / 255.0
+            for c in range(0, 3):
+                img_bgr[y1:y2, x1:x2, c] = alpha_cursor * cursor_image_np[:, :, c] + (1 - alpha_cursor) * img_bgr[y1:y2, x1:x2, c]
 
         # フレームを動画に書き込み
         video_writer.write(img_bgr)
