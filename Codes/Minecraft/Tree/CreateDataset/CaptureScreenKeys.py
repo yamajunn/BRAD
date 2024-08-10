@@ -136,10 +136,10 @@ def log_no_activity():
             last_activity_time = current_time
         time.sleep(0.1)  # スリープ時間を0.1秒に増やす
 
-# ログを5秒ごとに保存する関数
+# ログを1秒ごとに保存する関数
 def save_logs_periodically():
     while not stop_program:
-        time.sleep(5)
+        time.sleep(1)
         save_logs()
 
 # CSVファイルにキー入力とマウス操作のログを書き込む
