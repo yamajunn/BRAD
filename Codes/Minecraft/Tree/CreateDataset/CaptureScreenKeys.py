@@ -14,7 +14,7 @@ frame_dir = './Codes/Minecraft/Tree/Datas/Frames/'
 input_csv = './Codes/Minecraft/Tree/Datas/Input/input_log.csv'
 cursor_img_path = './Codes/Minecraft/Tree/CreateDataset/clipart.png'
 time_json = './Codes/Minecraft/Tree/Datas/Input/capture_time.json'
-output_video = './Codes/Minecraft/Tree/Datas/output_video.mp4'
+output_video = './Codes/Minecraft/Tree/Datas/Video/output_video.mp4'
 
 # フレーム保存ディレクトリが存在しない場合は作成
 os.makedirs(frame_dir, exist_ok=True)
