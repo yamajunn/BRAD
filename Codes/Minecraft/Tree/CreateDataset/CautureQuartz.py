@@ -18,6 +18,7 @@ start_time = time.time()
 
 try:
     while True:
+        print("a")
         # スクリーンの全体をキャプチャ
         image = CG.CGWindowListCreateImage(CG.CGRectInfinite, CG.kCGWindowListOptionOnScreenOnly, CG.kCGNullWindowID, CG.kCGWindowImageDefault)
         
