@@ -2,7 +2,6 @@ import Quartz
 import cv2
 import numpy as np
 import time
-from PIL import Image
 
 # 画面キャプチャの設定
 screen_rect = Quartz.CGDisplayBounds(Quartz.CGMainDisplayID())
@@ -22,12 +21,23 @@ def capture_screen():
         
         # Quartzの画像をnumpy配列に変換
         image_data = Quartz.CGDataProviderCopyData(Quartz.CGImageGetDataProvider(image_ref))
-        img = np.frombuffer(image_data, dtype=np.uint8).reshape((height, width, 4))
+        data = np.frombuffer(image_data, dtype=np.uint8)
         
+        # 画像のフォーマットを取得
+        bytes_per_row = Quartz.CGImageGetBytesPerRow(image_ref)
+        bits_per_component = Quartz.CGImageGetBitsPerComponent(image_ref)
+        color_space = Quartz.CGImageGetColorSpace(image_ref)
+        
+        # データのサイズと形状を動的に設定
+        if color_space is not None:
+            img = data.reshape((height, width, 4))  # ここは画像のチャンネル数に基づく
+        else:
+            img = data.reshape((height, width, 3))  # グレースケールや他の形式の場合
+
         # BGRAからBGRに変換
-        img = img[:, :, :3]  # RGBAからRGBに変換
+        img = img[..., :3]  # RGBAからRGBに変換
         img = img[..., ::-1]  # RGBからBGRに変換（OpenCVの期待する順序）
-        
+
         # フレームを動画に書き込み
         video_writer.write(img)
 
