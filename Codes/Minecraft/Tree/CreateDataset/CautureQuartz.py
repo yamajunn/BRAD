@@ -4,15 +4,21 @@ import numpy as np
 import Quartz
 import time
 import io
+import ctypes
 
 # マウスカーソル画像を取得する関数
 def get_cursor_image():
-    cursor_image = Quartz.CGImageCreateWithImageInRect(
-        Quartz.CGDisplayCreateImageForRect(Quartz.kCGDirectDisplayID, Quartz.CGRectMake(0, 0, 32, 32))
-    )
-    if cursor_image is not None:
-        cursor_data = Quartz.CGDataProviderCopyData(Quartz.CGImageGetDataProvider(cursor_image))
-        cursor_pil_image = Image.open(io.BytesIO(cursor_data))
+    # カーソルのサイズと形状は固定ではないため、適切なサイズを設定する
+    cursor_size = (32, 32)
+    display_id = Quartz.CGMainDisplayID()
+    
+    # スクリーン全体の画像を取得
+    screen_image = Quartz.CGDisplayCreateImageForRect(display_id, Quartz.CGRectMake(0, 0, cursor_size[0], cursor_size[1]))
+    
+    if screen_image is not None:
+        # 画像データをPillow形式に変換
+        image_data = Quartz.CGDataProviderCopyData(Quartz.CGImageGetDataProvider(screen_image))
+        cursor_pil_image = Image.open(io.BytesIO(image_data))
         return cursor_pil_image
     return None
 
