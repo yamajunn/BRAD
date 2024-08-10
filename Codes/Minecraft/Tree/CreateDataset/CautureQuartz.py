@@ -33,7 +33,8 @@ def capture_screen():
             # 現在のスクリーンの画像を取得（RGBAでキャプチャ）
             img = sct.grab(screen_rect)
             img_np = np.array(img)
-            img_np = np.dstack([img_np, np.full((img_np.shape[0], img_np.shape[1]), 255)])  # Add alpha channel
+            if img_np.shape[2] == 3:  # RGBの場合、アルファチャネルを追加
+                img_np = np.dstack([img_np, np.full((img_np.shape[0], img_np.shape[1]), 255)])
 
             # マウスカーソルの位置を取得
             cursor_x, cursor_y = get_mouse_position()
@@ -50,7 +51,7 @@ def capture_screen():
                             # カーソルのピクセルをスクリーン画像に適用（透明度も考慮）
                             cursor_pixel = cursor_np[i, j]
                             if cursor_pixel[3] > 0:  # alpha value
-                                img_np[y1 + i, x1 + j] = cursor_pixel
+                                img_np[y1 + i, x1 + j] = cursor_pixel[:4]  # Ensure the pixel has 4 channels
 
             # フレームを動画に書き込み
             video_writer.write(img_np)
