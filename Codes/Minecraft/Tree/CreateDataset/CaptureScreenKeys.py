@@ -24,7 +24,6 @@ cursor_img = cursor_img.resize((30 // 4, 40 // 4), Resampling.LANCZOS)
 # グローバル変数の設定
 key_logs = []
 mouse_logs = []
-image_list = []
 last_mouse_position = (0, 0)
 last_time = time.time()
 stop_program = False
@@ -66,17 +65,9 @@ def capture_screen():
             
             img.paste(cursor_img, cursor_position, cursor_img)
             
-            # 画像をリストに追加
+            # 画像を保存
             timestamp = int(current_time * 1000)
-            with image_lock:
-                image_list.append((img, timestamp))
-                
-            # バッチ保存処理
-            if len(image_list) >= 10:  # 10枚キャプチャごとに保存
-                with image_lock:
-                    for image, ts in image_list:
-                        save_image(image, ts)
-                    image_list.clear()
+            save_image(img, timestamp)
 
         except Exception as e:
             print(f"Error saving screenshot: {e}")
