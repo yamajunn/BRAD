@@ -10,7 +10,7 @@ screen_height = CG.CGDisplayPixelsHigh(CG.CGMainDisplayID())
 # ビデオライターの初期化
 fourcc = cv2.VideoWriter_fourcc(*'XVID')
 fps = 30  # フレームレートを設定
-output_file = 'screen_capture.avi'
+output_file = 'screen_capture.mp4'
 video_writer = cv2.VideoWriter(output_file, fourcc, fps, (screen_width, screen_height))
 
 # キャプチャの開始時間を取得
