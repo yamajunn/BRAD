@@ -1,84 +1,61 @@
-from PIL import ImageGrab, Image
-import cv2
+import mss
+import mss.tools
 import numpy as np
-import Quartz
+import cv2
+from PIL import Image
 import time
-import io
-import ctypes
 
-# マウスカーソル画像を取得する関数
-def get_cursor_image():
-    # カーソルのサイズと形状は固定ではないため、適切なサイズを設定する
-    cursor_size = (32, 32)
-    display_id = Quartz.CGMainDisplayID()
-    
-    # スクリーン全体の画像を取得
-    screen_image = Quartz.CGDisplayCreateImageForRect(display_id, Quartz.CGRectMake(0, 0, cursor_size[0], cursor_size[1]))
-    
-    if screen_image is not None:
-        # 画像データをPillow形式に変換
-        image_data = Quartz.CGDataProviderCopyData(Quartz.CGImageGetDataProvider(screen_image))
-        cursor_pil_image = Image.open(io.BytesIO(image_data))
-        return cursor_pil_image
-    return None
+# マウスカーソル画像のパス
+cursor_image_path = './Codes/Minecraft/Tree/CreateDataset/clipart.png'
 
-# マウスカーソルの位置を取得する関数
-def get_mouse_position():
-    mouse_location = Quartz.CGEventGetLocation(Quartz.CGEventCreate(None))
-    return int(mouse_location.x), int(mouse_location.y)
+# カーソル画像を読み込む
+cursor_image = Image.open(cursor_image_path)
+cursor_np = np.array(cursor_image)
+cursor_height, cursor_width = cursor_np.shape[:2]
 
 # 画面キャプチャの設定
 fps = 15
 output_file = 'output.mp4'
-
-# 画面のサイズを取得
-screen_rect = (0, 0, *ImageGrab.grab().size)
-width, height = screen_rect[2], screen_rect[3]
+screen_rect = {'top': 0, 'left': 0, 'width': 1440, 'height': 900}  # 画面のサイズに合わせて設定
 
 # 動画のフォーマット、コーデック、フレームレート、サイズを設定
 fourcc = cv2.VideoWriter_fourcc(*'mp4v')
-video_writer = cv2.VideoWriter(output_file, fourcc, fps, (width, height))
+video_writer = cv2.VideoWriter(output_file, fourcc, fps, (screen_rect['width'], screen_rect['height']))
 
-# カーソル画像を取得
-cursor_image = get_cursor_image()
+def get_mouse_position():
+    # マウスカーソルの位置を取得
+    import Quartz
+    mouse_location = Quartz.CGEventGetLocation(Quartz.CGEventCreate(None))
+    return int(mouse_location.x), int(mouse_location.y)
 
 def capture_screen():
-    while True:
-        # 現在のスクリーンの画像を取得
-        img = ImageGrab.grab(bbox=screen_rect)
-        
-        # Pillowの画像をnumpy配列に変換
-        img_np = np.array(img)
-        
-        # Pillowの画像はRGB形式なので、OpenCVのBGR形式に変換
-        img_bgr = cv2.cvtColor(img_np, cv2.COLOR_RGB2BGR)
-
-        # マウスカーソルの位置を取得
-        cursor_x, cursor_y = get_mouse_position()
-        
-        # カーソル画像が取得できている場合
-        if cursor_image:
-            # カーソル画像をnumpy配列に変換
-            cursor_np = np.array(cursor_image)
+    with mss.mss() as sct:
+        while True:
+            # 現在のスクリーンの画像を取得
+            img = sct.grab(screen_rect)
+            
+            # 画像をnumpy配列に変換
+            img_np = np.array(img)
+            
+            # マウスカーソルの位置を取得
+            cursor_x, cursor_y = get_mouse_position()
             
             # カーソルの位置とサイズを計算
-            cursor_width, cursor_height = cursor_image.size
-            
-            # カーソル画像をBGR形式に変換
-            cursor_bgr = cv2.cvtColor(cursor_np, cv2.COLOR_RGB2BGR)
-            
-            # キャプチャ画像にカーソル画像を重ね合わせる
-            x1, y1 = cursor_x, cursor_y
+            x1, y1 = cursor_x - cursor_width // 2, cursor_y - cursor_height // 2
             x2, y2 = x1 + cursor_width, y1 + cursor_height
             
-            if x1 < width and y1 < height:
-                img_bgr[y1:y2, x1:x2] = cv2.addWeighted(img_bgr[y1:y2, x1:x2], 0.5, cursor_bgr, 0.5, 0)
-        
-        # フレームを動画に書き込み
-        video_writer.write(img_bgr)
+            if x1 < screen_rect['width'] and y1 < screen_rect['height']:
+                # スクリーン画像にカーソル画像を重ね合わせる
+                for i in range(cursor_height):
+                    for j in range(cursor_width):
+                        if (0 <= x1 + j < screen_rect['width']) and (0 <= y1 + i < screen_rect['height']):
+                            img_np[y1 + i, x1 + j] = cursor_np[i, j]
 
-        # 15 FPSでキャプチャ
-        time.sleep(1 / fps)
+            # フレームを動画に書き込み
+            video_writer.write(img_np)
+
+            # 15 FPSでキャプチャ
+            time.sleep(1 / fps)
 
 # キャプチャを開始
 try:
