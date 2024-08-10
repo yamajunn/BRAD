@@ -18,17 +18,17 @@ def capture_screen():
     while True:
         # 現在のスクリーンの画像を取得
         image_ref = Quartz.CGDisplayCreateImage(Quartz.CGMainDisplayID())
-        
+
         # Quartzの画像をnumpy配列に変換
         image_data = Quartz.CGDataProviderCopyData(Quartz.CGImageGetDataProvider(image_ref))
         data = np.frombuffer(image_data, dtype=np.uint8)
-
+        
         # 画像のフォーマットを取得
         bytes_per_row = Quartz.CGImageGetBytesPerRow(image_ref)
         bits_per_component = Quartz.CGImageGetBitsPerComponent(image_ref)
         color_space = Quartz.CGImageGetColorSpace(image_ref)
         channels = 4 if color_space else 3  # 4チャンネル（BGRA）または3チャンネル（BGR）
-
+        
         # データのサイズを確認
         expected_size = height * bytes_per_row
         if len(data) != expected_size:
@@ -38,9 +38,9 @@ def capture_screen():
         # データをリシェイプ
         img = data.reshape((height, bytes_per_row // channels, channels))
         
-        # BGRAからBGRに変換
+        # データがBGRAの場合、BGRに変換
         if channels == 4:  # BGRA
-            img = img[..., :3]  # RGBAからRGBに変換
+            img = img[..., :3]  # BGRAからBGRに変換（最後のチャンネルを除去）
             img = img[..., ::-1]  # RGBからBGRに変換（OpenCVの期待する順序）
 
         # フレームを動画に書き込み
