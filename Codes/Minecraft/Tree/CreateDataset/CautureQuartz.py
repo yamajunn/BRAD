@@ -19,24 +19,31 @@ def capture_screen():
         # 現在のスクリーンの画像を取得
         image_ref = Quartz.CGDisplayCreateImage(Quartz.CGMainDisplayID())
 
-        # Quartzの画像をnumpy配列に変換
-        image_data = Quartz.CGDataProviderCopyData(Quartz.CGImageGetDataProvider(image_ref))
+        # Quartzの画像データを取得
+        image_provider = Quartz.CGImageGetDataProvider(image_ref)
+        image_data = Quartz.CGDataProviderCopyData(image_provider)
+        
+        # データをnumpy配列に変換
         data = np.frombuffer(image_data, dtype=np.uint8)
         
-        # 画像のフォーマットを取得
+        # 画像のフォーマット情報を取得
         bytes_per_row = Quartz.CGImageGetBytesPerRow(image_ref)
         bits_per_component = Quartz.CGImageGetBitsPerComponent(image_ref)
-        color_space = Quartz.CGImageGetColorSpace(image_ref)
-        channels = 4 if color_space else 3  # 4チャンネル（BGRA）または3チャンネル（BGR）
+        bits_per_pixel = Quartz.CGImageGetBitsPerPixel(image_ref)
+        channels = bits_per_pixel // bits_per_component
         
-        # データのサイズを確認
+        # 画像データのサイズを確認
         expected_size = height * bytes_per_row
         if len(data) != expected_size:
             print(f"Warning: Data size mismatch. Expected {expected_size}, but got {len(data)}")
             continue
-
+        
         # データをリシェイプ
-        img = data.reshape((height, bytes_per_row // channels, channels))
+        try:
+            img = data.reshape((height, bytes_per_row // channels, channels))
+        except ValueError as e:
+            print(f"ValueError: {e}")
+            continue
         
         # データがBGRAの場合、BGRに変換
         if channels == 4:  # BGRA
