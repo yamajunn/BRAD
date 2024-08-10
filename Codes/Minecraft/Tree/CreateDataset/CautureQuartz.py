@@ -27,12 +27,15 @@ def capture_screen():
         bytes_per_row = Quartz.CGImageGetBytesPerRow(image_ref)
         bits_per_component = Quartz.CGImageGetBitsPerComponent(image_ref)
         color_space = Quartz.CGImageGetColorSpace(image_ref)
-        
+        channels = 4 if color_space else 3  # 4チャンネル（BGRA）または3チャンネル（BGR）
+
         # データのサイズと形状を動的に設定
-        if color_space is not None:
-            img = data.reshape((height, width, 4))  # ここは画像のチャンネル数に基づく
-        else:
-            img = data.reshape((height, width, 3))  # グレースケールや他の形式の場合
+        expected_size = height * bytes_per_row
+        if len(data) != expected_size:
+            print(f"Warning: Data size mismatch. Expected {expected_size}, but got {len(data)}")
+            continue
+
+        img = data.reshape((height, bytes_per_row // channels, channels))
 
         # BGRAからBGRに変換
         img = img[..., :3]  # RGBAからRGBに変換
