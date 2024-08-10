@@ -7,12 +7,14 @@ from PIL import Image, ImageGrab
 from PIL.Image import Resampling
 from pynput import mouse, keyboard
 from threading import Thread, Lock
+import cv2
 
 # パスの設定
 frame_dir = './Codes/Minecraft/Tree/Datas/Frames/'
 input_csv = './Codes/Minecraft/Tree/Datas/Input/input_log.csv'
 cursor_img_path = './Codes/Minecraft/Tree/CreateDataset/clipart.png'
 time_json = './Codes/Minecraft/Tree/Datas/Input/capture_time.json'
+output_video = './Codes/Minecraft/Tree/Datas/output_video.mp4'
 
 # フレーム保存ディレクトリが存在しない場合は作成
 os.makedirs(frame_dir, exist_ok=True)
@@ -39,8 +41,8 @@ def get_nearest_angle(dx, dy):
 
 # マウスカーソルの合成位置を調整する関数
 def get_scaled_cursor_position(cursor_pos, orig_size, new_size):
-    scale_x = new_size[0] / orig_size[0]*2
-    scale_y = new_size[1] / orig_size[1]*2
+    scale_x = new_size[0] / orig_size[0] * 2
+    scale_y = new_size[1] / orig_size[1] * 2
     return (int(cursor_pos[0] * scale_x), int(cursor_pos[1] * scale_y))
 
 img = ImageGrab.grab()
@@ -57,15 +59,16 @@ def capture_screen():
             # スクリーンキャプチャ
             img = ImageGrab.grab()
             img = img.resize(new_size, Resampling.LANCZOS)
-            
+
             # マウスカーソルの合成位置をスケーリング
             scaled_cursor_position = get_scaled_cursor_position(last_mouse_position, orig_size, new_size)
-            
+
             # カーソル画像を中央に配置
-            cursor_position = (scaled_cursor_position[0] - cursor_img.width // 2, scaled_cursor_position[1] - cursor_img.height // 2)
-            
+            cursor_position = (scaled_cursor_position[0] - cursor_img.width // 2,
+                               scaled_cursor_position[1] - cursor_img.height // 2)
+
             img.paste(cursor_img, cursor_position, cursor_img)
-            
+
             # 画像を保存
             timestamp = int(current_time * 1000)
             save_image(img, timestamp)
@@ -82,7 +85,10 @@ def save_image(img, timestamp):
     img.save(image_path)
     saved_images.append(image_path)
     with open(time_json, 'w') as jsonfile:
-        json.dump({'start_time': last_time, 'end_time': time.time(), 'saved_images': saved_images}, jsonfile)
+        json.dump({'start_time': last_time,
+                   'end_time': time.time(),
+                   'saved_images': saved_images},
+                  jsonfile, indent=4)
 
 # キー入力の記録
 def on_press(key):
@@ -94,14 +100,18 @@ def on_press(key):
         return False  # リスナーを停止する
     if key_str not in key_states:
         key_states[key_str] = 'press'
-        key_logs.append({'time': time.time(), 'key': key_str, 'action': 'press'})
+        key_logs.append({'time': time.time(),
+                         'key': key_str,
+                         'action': 'press'})
 
 def on_release(key):
     global last_activity_time
     key_str = str(key)
     last_activity_time = time.time()
     if key_str in key_states:
-        key_logs.append({'time': time.time(), 'key': key_str, 'action': 'release'})
+        key_logs.append({'time': time.time(),
+                         'key': key_str,
+                         'action': 'release'})
         del key_states[key_str]
 
 # マウス操作の記録
@@ -112,7 +122,11 @@ def on_move(x, y):
     distance = math.sqrt(dx**2 + dy**2)
     if distance >= 1:
         angle = get_nearest_angle(dx, dy)
-        log_entry = {'time': time.time(), 'x': x, 'y': y, 'angle': angle, 'action': 'move'}
+        log_entry = {'time': time.time(),
+                     'x': x,
+                     'y': y,
+                     'angle': angle,
+                     'action': 'move'}
         mouse_logs.append(log_entry)
         last_mouse_position = (x, y)
         last_activity_time = time.time()
@@ -120,13 +134,22 @@ def on_move(x, y):
 def on_click(x, y, button, pressed):
     global last_activity_time
     action = 'click_press' if pressed else 'click_release'
-    log_entry = {'time': time.time(), 'x': x, 'y': y, 'button': str(button), 'action': action}
+    log_entry = {'time': time.time(),
+                 'x': x,
+                 'y': y,
+                 'button': str(button),
+                 'action': action}
     mouse_logs.append(log_entry)
     last_activity_time = time.time()
 
 def on_scroll(x, y, dx, dy):
     global last_activity_time
-    log_entry = {'time': time.time(), 'x': x, 'y': y, 'dx': dx, 'dy': dy, 'action': 'scroll'}
+    log_entry = {'time': time.time(),
+                 'x': x,
+                 'y': y,
+                 'dx': dx,
+                 'dy': dy,
+                 'action': 'scroll'}
     mouse_logs.append(log_entry)
     last_activity_time = time.time()
 
@@ -136,7 +159,8 @@ def log_no_activity():
     while not stop_program:
         current_time = time.time()
         if current_time - last_activity_time >= 0.1:  # 適用時間を0.1秒に増やす
-            log_entry = {'time': current_time, 'action': 'no_activity'}
+            log_entry = {'time': current_time,
+                         'action': 'no_activity'}
             mouse_logs.append(log_entry)
             last_activity_time = current_time
         time.sleep(0.1)  # スリープ時間を0.1秒に増やす
@@ -154,9 +178,25 @@ def save_logs():
         writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
         writer.writeheader()
         for log in key_logs:
-            writer.writerow({'time': log['time'], 'key': log['key'], 'action': log['action'], 'x': '', 'y': '', 'angle': '', 'dx': '', 'dy': '', 'button': ''})
+            writer.writerow({'time': log['time'],
+                             'key': log['key'],
+                             'action': log['action'],
+                             'x': '',
+                             'y': '',
+                             'angle': '',
+                             'dx': '',
+                             'dy': '',
+                             'button': ''})
         for log in mouse_logs:
-            writer.writerow({'time': log['time'], 'key': '', 'action': log['action'], 'x': log.get('x', ''), 'y': log.get('y', ''), 'angle': log.get('angle', ''), 'dx': log.get('dx', ''), 'dy': log.get('dy', ''), 'button': log.get('button', '')})
+            writer.writerow({'time': log['time'],
+                             'key': '',
+                             'action': log['action'],
+                             'x': log.get('x', ''),
+                             'y': log.get('y', ''),
+                             'angle': log.get('angle', ''),
+                             'dx': log.get('dx', ''),
+                             'dy': log.get('dy', ''),
+                             'button': log.get('button', '')})
 
 # スレッドの作成
 screen_thread = Thread(target=capture_screen)
@@ -190,3 +230,25 @@ finally:
 
 # 最後にログを保存
 save_logs()
+
+# 画像を動画化する関数
+def images_to_video(image_paths, video_path, fps=30):
+    if not image_paths:
+        print("No images to create video.")
+        return
+
+    frame = cv2.imread(image_paths[0])
+    height, width, _ = frame.shape
+
+    fourcc = cv2.VideoWriter_fourcc(*'mp4v')
+    video_writer = cv2.VideoWriter(video_path, fourcc, fps, (width, height))
+
+    for image_path in image_paths:
+        frame = cv2.imread(image_path)
+        video_writer.write(frame)
+
+    video_writer.release()
+
+# 保存した画像を動画化
+images_to_video(saved_images, output_video)
+print(f"Video saved to {output_video}")
