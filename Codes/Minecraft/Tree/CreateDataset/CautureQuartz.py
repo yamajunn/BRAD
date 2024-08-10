@@ -1,53 +1,39 @@
-import Quartz.CoreGraphics as CG
+import Quartz
 import cv2
 import numpy as np
 import time
 
-# 画面の幅と高さを取得
-screen_width = CG.CGDisplayPixelsWide(CG.CGMainDisplayID())
-screen_height = CG.CGDisplayPixelsHigh(CG.CGMainDisplayID())
+# 画面キャプチャの設定
+screen_rect = Quartz.CGDisplayBounds(Quartz.CGMainDisplayID())
+width = int(screen_rect.size.width)
+height = int(screen_rect.size.height)
+fps = 15
+output_file = 'output.mp4'
 
-# ビデオライターの初期化
-fourcc = cv2.VideoWriter_fourcc(*'XVID')
-fps = 30  # フレームレートを設定
-output_file = 'screen_capture.mp4'
-video_writer = cv2.VideoWriter(output_file, fourcc, fps, (screen_width, screen_height))
+# 動画のフォーマット、コーデック、フレームレート、サイズを設定
+fourcc = cv2.VideoWriter_fourcc(*'mp4v')
+video_writer = cv2.VideoWriter(output_file, fourcc, fps, (width, height))
 
-# キャプチャの開始時間を取得
-start_time = time.time()
-
-try:
+# 画面キャプチャを行う関数
+def capture_screen():
     while True:
-        print("a")
-        # スクリーンの全体をキャプチャ
-        image = CG.CGWindowListCreateImage(CG.CGRectInfinite, CG.kCGWindowListOptionOnScreenOnly, CG.kCGNullWindowID, CG.kCGWindowImageDefault)
-        
-        # キャプチャした画像をnumpy配列に変換
-        width = CG.CGImageGetWidth(image)
-        height = CG.CGImageGetHeight(image)
-        data = CG.CGDataProviderCopyData(CG.CGImageGetDataProvider(image))
-        image_data = np.frombuffer(data, dtype=np.uint8)
-        image_data = image_data.reshape((height, width, 4))
+        # 現在のスクリーンの画像を取得
+        image_ref = Quartz.CGDisplayCreateImage(Quartz.CGMainDisplayID())
+        bitmap = Quartz.CGImageGetBitmapInfo(image_ref)
+        img = np.array(Quartz.CGImageGetDataProvider(image_ref).data)
+        img = img.reshape((height, width, 4))[:, :, :3]  # RGBAからRGBに変換
 
-        # BGRAからBGRに変換
-        image_data = image_data[:, :, :3]
-        
-        # OpenCV形式に変換してビデオライターに書き込み
-        frame = cv2.cvtColor(image_data, cv2.COLOR_RGBA2BGR)
-        video_writer.write(frame)
-        
-        # キャプチャの間隔を調整
+        # フレームを動画に書き込み
+        video_writer.write(img)
+
+        # 15 FPSでキャプチャ
         time.sleep(1 / fps)
-        
-        # 終了条件（ここでは5秒間キャプチャを行う）
-        if time.time() - start_time > 5:
-            break
 
+# キャプチャを開始
+try:
+    capture_screen()
 except KeyboardInterrupt:
     pass
-
 finally:
     video_writer.release()
-    cv2.destroyAllWindows()
-
-print(f"ビデオファイルが保存されました: {output_file}")
+    print(f"Recording saved to {output_file}")
