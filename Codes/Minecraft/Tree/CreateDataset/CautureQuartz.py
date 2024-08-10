@@ -2,6 +2,7 @@ import Quartz
 import cv2
 import numpy as np
 import time
+from PIL import Image
 
 # 画面キャプチャの設定
 screen_rect = Quartz.CGDisplayBounds(Quartz.CGMainDisplayID())
@@ -19,9 +20,17 @@ def capture_screen():
     while True:
         # 現在のスクリーンの画像を取得
         image_ref = Quartz.CGDisplayCreateImage(Quartz.CGMainDisplayID())
-        bitmap = Quartz.CGImageGetBitmapInfo(image_ref)
-        img = np.array(Quartz.CGImageGetDataProvider(image_ref).data)
-        img = img.reshape((height, width, 4))[:, :, :3]  # RGBAからRGBに変換
+        
+        # Quartzの画像をPIL Imageに変換
+        pil_image = Image.frombytes(
+            'RGBA', 
+            (Quartz.CGImageGetWidth(image_ref), Quartz.CGImageGetHeight(image_ref)),
+            Quartz.CGDataProviderCopyData(Quartz.CGImageGetDataProvider(image_ref))
+        )
+        
+        # PIL Imageをnumpy配列に変換
+        img = np.array(pil_image)
+        img = img[:, :, :3]  # RGBAからRGBに変換
 
         # フレームを動画に書き込み
         video_writer.write(img)
