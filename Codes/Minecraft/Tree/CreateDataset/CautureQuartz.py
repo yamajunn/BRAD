@@ -15,23 +15,19 @@ output_file = 'output.mp4'
 fourcc = cv2.VideoWriter_fourcc(*'mp4v')
 video_writer = cv2.VideoWriter(output_file, fourcc, fps, (width, height))
 
-# 画面キャプチャを行う関数
 def capture_screen():
     while True:
         # 現在のスクリーンの画像を取得
         image_ref = Quartz.CGDisplayCreateImage(Quartz.CGMainDisplayID())
         
-        # Quartzの画像をPIL Imageに変換
-        pil_image = Image.frombytes(
-            'RGBA', 
-            (Quartz.CGImageGetWidth(image_ref), Quartz.CGImageGetHeight(image_ref)),
-            Quartz.CGDataProviderCopyData(Quartz.CGImageGetDataProvider(image_ref))
-        )
+        # Quartzの画像をnumpy配列に変換
+        image_data = Quartz.CGDataProviderCopyData(Quartz.CGImageGetDataProvider(image_ref))
+        img = np.frombuffer(image_data, dtype=np.uint8).reshape((height, width, 4))
         
-        # PIL Imageをnumpy配列に変換
-        img = np.array(pil_image)
+        # BGRAからBGRに変換
         img = img[:, :, :3]  # RGBAからRGBに変換
-
+        img = img[..., ::-1]  # RGBからBGRに変換（OpenCVの期待する順序）
+        
         # フレームを動画に書き込み
         video_writer.write(img)
 
