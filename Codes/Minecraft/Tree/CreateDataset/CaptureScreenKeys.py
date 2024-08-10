@@ -136,6 +136,23 @@ def log_no_activity():
             last_activity_time = current_time
         time.sleep(0.1)  # スリープ時間を0.1秒に増やす
 
+# ログを5秒ごとに保存する関数
+def save_logs_periodically():
+    while not stop_program:
+        time.sleep(5)
+        save_logs()
+
+# CSVファイルにキー入力とマウス操作のログを書き込む
+def save_logs():
+    with open(input_csv, 'w', newline='') as csvfile:
+        fieldnames = ['time', 'key', 'action', 'x', 'y', 'angle', 'dx', 'dy', 'button']
+        writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
+        writer.writeheader()
+        for log in key_logs:
+            writer.writerow({'time': log['time'], 'key': log['key'], 'action': log['action'], 'x': '', 'y': '', 'angle': '', 'dx': '', 'dy': '', 'button': ''})
+        for log in mouse_logs:
+            writer.writerow({'time': log['time'], 'key': '', 'action': log['action'], 'x': log.get('x', ''), 'y': log.get('y', ''), 'angle': log.get('angle', ''), 'dx': log.get('dx', ''), 'dy': log.get('dy', ''), 'button': log.get('button', '')})
+
 # スレッドの作成
 screen_thread = Thread(target=capture_screen)
 screen_thread.daemon = True
@@ -144,6 +161,10 @@ screen_thread.start()
 no_activity_thread = Thread(target=log_no_activity)
 no_activity_thread.daemon = True
 no_activity_thread.start()
+
+save_logs_thread = Thread(target=save_logs_periodically)
+save_logs_thread.daemon = True
+save_logs_thread.start()
 
 mouse_listener = mouse.Listener(on_move=on_move, on_click=on_click, on_scroll=on_scroll)
 keyboard_listener = keyboard.Listener(on_press=on_press, on_release=on_release)
@@ -160,16 +181,10 @@ except KeyboardInterrupt:
 finally:
     mouse_listener.stop()
     keyboard_listener.stop()
+    save_logs_thread.join()
 
-# CSVファイルにキー入力とマウス操作のログを書き込む
-with open(input_csv, 'w', newline='') as csvfile:
-    fieldnames = ['time', 'key', 'action', 'x', 'y', 'angle', 'dx', 'dy', 'button']
-    writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
-    writer.writeheader()
-    for log in key_logs:
-        writer.writerow({'time': log['time'], 'key': log['key'], 'action': log['action'], 'x': '', 'y': '', 'angle': '', 'dx': '', 'dy': '', 'button': ''})
-    for log in mouse_logs:
-        writer.writerow({'time': log['time'], 'key': '', 'action': log['action'], 'x': log.get('x', ''), 'y': log.get('y', ''), 'angle': log.get('angle', ''), 'dx': log.get('dx', ''), 'dy': log.get('dy', ''), 'button': log.get('button', '')})
+# 最後にログを保存
+save_logs()
 
 # JSONファイルに記録した時間を書き込む
 with open(time_json, 'w') as jsonfile:
