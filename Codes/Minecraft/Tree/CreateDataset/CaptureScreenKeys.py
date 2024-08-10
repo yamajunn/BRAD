@@ -81,6 +81,8 @@ def save_image(img, timestamp):
     image_path = os.path.join(frame_dir, f'screenshot_{timestamp}.png')
     img.save(image_path)
     saved_images.append(image_path)
+    with open(time_json, 'w') as jsonfile:
+        json.dump({'start_time': last_time, 'end_time': time.time(), 'saved_images': saved_images}, jsonfile)
 
 # キー入力の記録
 def on_press(key):
@@ -188,7 +190,3 @@ finally:
 
 # 最後にログを保存
 save_logs()
-
-# JSONファイルに記録した時間と保存された画像の名前を書き込む
-with open(time_json, 'w') as jsonfile:
-    json.dump({'start_time': last_time, 'end_time': time.time(), 'saved_images': saved_images}, jsonfile)
