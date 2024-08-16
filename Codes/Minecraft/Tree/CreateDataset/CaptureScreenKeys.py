@@ -110,6 +110,10 @@ def save_logs():
                              'x': log.get('x', ''), 'y': log.get('y', ''), 'angle': '',
                              'dx': log.get('dx', ''), 'dy': log.get('dy', ''), 'button': log.get('button', '')})
 
+    # ログをリセット
+    key_logs.clear()
+    mouse_logs.clear()
+
 # 画像を動画化する関数
 def save_video():
     timestamp = int(time.time())
@@ -128,6 +132,9 @@ def save_video():
 
     video_writer.release()
     print(f"Video saved to {output_video}")
+
+    # フレームをリセット
+    frames.clear()
 
 # スレッドの作成
 screen_thread = Thread(target=capture_screen)
@@ -150,4 +157,3 @@ finally:
     mouse_listener.stop()
     keyboard_listener.stop()
     screen_thread.join()
-
