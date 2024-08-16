@@ -21,3 +21,4 @@ k600_targz
 *.json
 .venv
 .vscode
+.venv_BRAD
