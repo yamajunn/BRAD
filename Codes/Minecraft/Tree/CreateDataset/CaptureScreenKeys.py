@@ -150,3 +150,4 @@ finally:
     mouse_listener.stop()
     keyboard_listener.stop()
     screen_thread.join()
+
