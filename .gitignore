@@ -19,3 +19,5 @@ k600_targz
 *.rar
 *.7z
 *.json
+.venv
+.vscode
