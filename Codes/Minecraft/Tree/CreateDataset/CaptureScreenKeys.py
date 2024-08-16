@@ -78,7 +78,7 @@ def on_press(key):
         if not capturing:
             save_logs()
             save_video()
-    if key_str not in key_states:
+    elif key_str not in key_states:
         key_states[key_str] = 'press'
         key_logs.append({'time': time.time(), 'key': key_str, 'action': 'press'})
 
