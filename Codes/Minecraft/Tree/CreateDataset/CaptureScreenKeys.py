@@ -6,6 +6,7 @@ from PIL import Image, ImageGrab
 from pynput import mouse, keyboard
 from threading import Thread
 import cv2
+import math
 
 # パスの設定
 input_csv_template = './Codes/Minecraft/Tree/Datas/Input/input_log_{}.csv'
@@ -29,6 +30,11 @@ last_mouse_position = (0, 0)
 stop_program = False
 capturing = False
 key_states = {}
+
+# 角度を10度刻みで記録するための関数
+def get_nearest_angle(dx, dy):
+    angle = math.degrees(math.atan2(dy, dx)) % 360
+    return round(angle / 10) * 10
 
 # スクリーンキャプチャとフレームの保存
 def capture_screen():
@@ -85,6 +91,14 @@ def on_release(key):
 # マウス操作の記録
 def on_move(x, y):
     global last_mouse_position
+    dx = x - last_mouse_position[0]
+    dy = y - last_mouse_position[1]
+    distance = math.sqrt(dx**2 + dy**2)
+
+    if distance >= 1:  # 1mm移動
+        angle = get_nearest_angle(dx, dy)
+        mouse_logs.append({'time': time.time(), 'x': x, 'y': y, 'angle': angle, 'action': 'move'})
+    
     last_mouse_position = (x, y)
 
 def on_click(x, y, button, pressed):
@@ -107,7 +121,7 @@ def save_logs():
                              'x': '', 'y': '', 'angle': '', 'dx': '', 'dy': '', 'button': ''})
         for log in mouse_logs:
             writer.writerow({'time': log['time'], 'key': '', 'action': log['action'],
-                             'x': log.get('x', ''), 'y': log.get('y', ''), 'angle': '',
+                             'x': log.get('x', ''), 'y': log.get('y', ''), 'angle': log.get('angle', ''),
                              'dx': log.get('dx', ''), 'dy': log.get('dy', ''), 'button': log.get('button', '')})
 
     # ログをリセット
