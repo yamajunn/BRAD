@@ -50,10 +50,10 @@ def capture_screen():
                 cursor_position = (last_mouse_position[0] - cursor_np.shape[1] // 2,
                                    last_mouse_position[1] - cursor_np.shape[0] // 2)
 
-                y1 = max(cursor_position[1], 0)
-                y2 = min(cursor_position[1] + cursor_np.shape[0], frame.shape[0])
-                x1 = max(cursor_position[0], 0)
-                x2 = min(cursor_position[0] + cursor_np.shape[1], frame.shape[1])
+                y1 = int(max(cursor_position[1], 0))
+                y2 = int(min(cursor_position[1] + cursor_np.shape[0], frame.shape[0]))
+                x1 = int(max(cursor_position[0], 0))
+                x2 = int(min(cursor_position[0] + cursor_np.shape[1], frame.shape[1]))
 
                 if y1 < y2 and x1 < x2:
                     alpha_s = cursor_np[y1 - cursor_position[1]:y2 - cursor_position[1], x1 - cursor_position[0]:x2 - cursor_position[0], 3] / 255.0
