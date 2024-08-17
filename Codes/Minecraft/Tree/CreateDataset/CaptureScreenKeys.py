@@ -9,8 +9,8 @@ import cv2
 import math
 
 # パスの設定
-input_csv_template = './Codes/Minecraft/Tree/Datas/Input/input_log_{}.csv'
-output_video_template = './Codes/Minecraft/Tree/Datas/Video/output_video_{}.mp4'
+input_csv_template = './Codes/Minecraft/Tree/Datas/Input/{}.csv'
+output_video_template = './Codes/Minecraft/Tree/Datas/Video/{}.mp4'
 cursor_img_path = './Codes/Minecraft/Tree/CreateDataset/clipart.png'
 
 # 必要なディレクトリを作成
@@ -50,15 +50,20 @@ def capture_screen():
                 cursor_position = (last_mouse_position[0] - cursor_np.shape[1] // 2,
                                    last_mouse_position[1] - cursor_np.shape[0] // 2)
 
-                y1, y2 = int(max(cursor_position[1], 0)), int(min(cursor_position[1] + cursor_np.shape[0], frame.shape[0]))
-                x1, x2 = int(max(cursor_position[0], 0)), int(min(cursor_position[0] + cursor_np.shape[1], frame.shape[1]))
+                y1, y2 = max(cursor_position[1], 0), min(cursor_position[1] + cursor_np.shape[0], frame.shape[0])
+                x1, x2 = max(cursor_position[0], 0), min(cursor_position[0] + cursor_np.shape[1], frame.shape[1])
 
                 alpha_s = cursor_np[:, :, 3] / 255.0
                 alpha_l = 1.0 - alpha_s
 
                 for c in range(3):
-                    frame[y1:y2, x1:x2, c] = (alpha_s[:y2-y1, :x2-x1] * cursor_np[:y2-y1, :x2-x1, c] +
-                                              alpha_l[:y2-y1, :x2-x1] * frame[y1:y2, x1:x2, c])
+                    frame[y1:y2, x1:x2, c] = (alpha_s[y1 - cursor_position[1]:y2 - cursor_position[1],
+                                                    x1 - cursor_position[0]:x2 - cursor_position[0]] * 
+                                              cursor_np[y1 - cursor_position[1]:y2 - cursor_position[1],
+                                                        x1 - cursor_position[0]:x2 - cursor_position[0], c] +
+                                              alpha_l[y1 - cursor_position[1]:y2 - cursor_position[1],
+                                                      x1 - cursor_position[0]:x2 - cursor_position[0]] * 
+                                              frame[y1:y2, x1:x2, c])
 
                 frames.append(frame)
             except Exception as e:
