@@ -19,7 +19,7 @@ os.makedirs(os.path.dirname(output_video_template.format('dummy')), exist_ok=Tru
 
 # マウスカーソル画像の読み込みとサイズ変更
 cursor_img = Image.open(cursor_img_path).convert("RGBA")
-cursor_img = cursor_img.resize((30, 40), Image.Resampling.LANCZOS)
+cursor_img = cursor_img.resize((25, 40), Image.Resampling.LANCZOS)
 cursor_np = np.array(cursor_img)
 
 # グローバル変数の設定
