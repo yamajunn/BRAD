@@ -50,20 +50,18 @@ def capture_screen():
                 cursor_position = (last_mouse_position[0] - cursor_np.shape[1] // 2,
                                    last_mouse_position[1] - cursor_np.shape[0] // 2)
 
-                y1, y2 = max(cursor_position[1], 0), min(cursor_position[1] + cursor_np.shape[0], frame.shape[0])
-                x1, x2 = max(cursor_position[0], 0), min(cursor_position[0] + cursor_np.shape[1], frame.shape[1])
+                y1 = max(cursor_position[1], 0)
+                y2 = min(cursor_position[1] + cursor_np.shape[0], frame.shape[0])
+                x1 = max(cursor_position[0], 0)
+                x2 = min(cursor_position[0] + cursor_np.shape[1], frame.shape[1])
 
-                alpha_s = cursor_np[:, :, 3] / 255.0
-                alpha_l = 1.0 - alpha_s
+                if y1 < y2 and x1 < x2:
+                    alpha_s = cursor_np[y1 - cursor_position[1]:y2 - cursor_position[1], x1 - cursor_position[0]:x2 - cursor_position[0], 3] / 255.0
+                    alpha_l = 1.0 - alpha_s
 
-                for c in range(3):
-                    frame[y1:y2, x1:x2, c] = (alpha_s[y1 - cursor_position[1]:y2 - cursor_position[1],
-                                                    x1 - cursor_position[0]:x2 - cursor_position[0]] * 
-                                              cursor_np[y1 - cursor_position[1]:y2 - cursor_position[1],
-                                                        x1 - cursor_position[0]:x2 - cursor_position[0], c] +
-                                              alpha_l[y1 - cursor_position[1]:y2 - cursor_position[1],
-                                                      x1 - cursor_position[0]:x2 - cursor_position[0]] * 
-                                              frame[y1:y2, x1:x2, c])
+                    for c in range(3):
+                        frame[y1:y2, x1:x2, c] = (alpha_s * cursor_np[y1 - cursor_position[1]:y2 - cursor_position[1], x1 - cursor_position[0]:x2 - cursor_position[0], c] +
+                                                  alpha_l * frame[y1:y2, x1:x2, c])
 
                 frames.append(frame)
             except Exception as e:
