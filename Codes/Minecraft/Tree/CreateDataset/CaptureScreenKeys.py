@@ -2,10 +2,10 @@ import time
 import os
 import csv
 import numpy as np
-from PIL import Image, ImageGrab
+import cv2
+from PIL import ImageGrab
 from pynput import mouse, keyboard
 from threading import Thread
-import cv2
 import math
 
 # パスの設定
@@ -18,9 +18,8 @@ os.makedirs(os.path.dirname(input_csv_template.format('dummy')), exist_ok=True)
 os.makedirs(os.path.dirname(output_video_template.format('dummy')), exist_ok=True)
 
 # マウスカーソル画像の読み込みとサイズ変更
-cursor_img = Image.open(cursor_img_path).convert("RGBA")
-cursor_img = cursor_img.resize((25, 40), Image.Resampling.LANCZOS)
-cursor_np = np.array(cursor_img)
+cursor_img = cv2.imread(cursor_img_path, cv2.IMREAD_UNCHANGED)
+cursor_img = cv2.resize(cursor_img, (25, 40), interpolation=cv2.INTER_LANCZOS4)
 
 # グローバル変数の設定
 key_logs = []
@@ -45,23 +44,24 @@ def capture_screen():
                 # スクリーンキャプチャ
                 img = ImageGrab.grab()
                 frame = np.array(img)
+                frame = cv2.cvtColor(frame, cv2.COLOR_RGB2BGR)
 
                 # カーソル画像を合成
-                cursor_position = (last_mouse_position[0] - cursor_np.shape[1] // 2,
-                                   last_mouse_position[1] - cursor_np.shape[0] // 2)
+                cursor_x, cursor_y = last_mouse_position
+                cursor_h, cursor_w = cursor_img.shape[:2]
 
-                y1 = int(max(cursor_position[1], 0))
-                y2 = int(min(cursor_position[1] + cursor_np.shape[0], frame.shape[0]))
-                x1 = int(max(cursor_position[0], 0))
-                x2 = int(min(cursor_position[0] + cursor_np.shape[1], frame.shape[1]))
+                x1, y1 = max(cursor_x - cursor_w // 2, 0), max(cursor_y - cursor_h // 2, 0)
+                x2, y2 = min(cursor_x + cursor_w // 2, frame.shape[1]), min(cursor_y + cursor_h // 2, frame.shape[0])
 
-                if y1 < y2 and x1 < x2:
-                    alpha_s = cursor_np[y1 - cursor_position[1]:y2 - cursor_position[1], x1 - cursor_position[0]:x2 - cursor_position[0], 3] / 255.0
-                    alpha_l = 1.0 - alpha_s
+                cursor_x1, cursor_y1 = max(0, cursor_w // 2 - cursor_x), max(0, cursor_h // 2 - cursor_y)
+                cursor_x2, cursor_y2 = cursor_x1 + (x2 - x1), cursor_y1 + (y2 - y1)
 
-                    for c in range(3):
-                        frame[y1:y2, x1:x2, c] = (alpha_s * cursor_np[y1 - cursor_position[1]:y2 - cursor_position[1], x1 - cursor_position[0]:x2 - cursor_position[0], c] +
-                                                  alpha_l * frame[y1:y2, x1:x2, c])
+                alpha_s = cursor_img[cursor_y1:cursor_y2, cursor_x1:cursor_x2, 3] / 255.0
+                alpha_l = 1.0 - alpha_s
+
+                for c in range(3):
+                    frame[y1:y2, x1:x2, c] = (alpha_s * cursor_img[cursor_y1:cursor_y2, cursor_x1:cursor_x2, c] +
+                                              alpha_l * frame[y1:y2, x1:x2, c])
 
                 frames.append(frame)
             except Exception as e:
@@ -144,8 +144,7 @@ def save_video():
     video_writer = cv2.VideoWriter(output_video, fourcc, 30, (width, height))
 
     for frame in frames:
-        frame_rgb = cv2.cvtColor(frame, cv2.COLOR_RGB2BGR)
-        video_writer.write(frame_rgb)
+        video_writer.write(frame)
 
     video_writer.release()
     print(f"Video saved to {output_video}")
