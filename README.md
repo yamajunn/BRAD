@@ -1,4 +1,4 @@
-# BRAD (Behavior Recognition Action Decision)
+<!-- # BRAD (Behavior Recognition Action Decision)
 Renamed from Image Recognition Action Decision to Behavior Recognition Action Decision
   
 ・[--ENGLISH](#english-ver)
@@ -378,4 +378,4 @@ BRADはこれらの行動計画テキストと同時に自身が取得した過�
 2段階目
 行動認識によりデータを収集
 - 現在の情報としてカーソル等の座標を読み取るスクリプト
-- 行動認識により読み取る
+- 行動認識により読み取る -->
